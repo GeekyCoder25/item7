@@ -32,7 +32,7 @@
     "react-native-splash-screen": "^3.3.0",
     "react-native-svg": "^13.6.0",
     "react-native-svg-transformer": "^1.0.0",
-    "vector-icons": "^0.1.0"
+    "react-native-vector-icons": "^9.2.0"
   },
   "devDependencies": {
     "@babel/core": "^7.12.9",

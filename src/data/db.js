@@ -6,7 +6,11 @@ export const foodMenus = [
       require('../../assets/images/aPlateWithChicken1.png'),
       require('../../assets/images/aPlateWithChicken2.png'),
     ],
+    additionals: [],
+    desserts: [],
+    drinks: [],
     price: 1000,
+    deliveryFee: 500,
     id: 1,
   },
   {
@@ -16,7 +20,11 @@ export const foodMenus = [
       require('../../assets/images/aPlateWithBeef1.png'),
       require('../../assets/images/aPlateWithBeef2.png'),
     ],
+    additionals: [],
+    desserts: [],
+    drinks: [],
     price: 600,
+    deliveryFee: 500,
     id: 2,
   },
   {
@@ -24,7 +32,11 @@ export const foodMenus = [
     icon: require('../../assets/images/aPlateWithCroakerFish.png'),
     image: [require('../../assets/images/aPlateWithCroakerFish1.png')],
     //   image2: require('../../assets/images/aPlateWithCroakerFish2.png'),
+    additionals: [],
+    desserts: [],
+    drinks: [],
     price: 1150,
+    deliveryFee: 500,
     id: 3,
   },
   {
@@ -32,7 +44,11 @@ export const foodMenus = [
     icon: require('../../assets/images/aPlateWithFish.png'),
     image: [require('../../assets/images/aPlateWithFish1.png')],
     //   image2: require('../../assets/images/aPlateWithFish2.png'),
+    additionals: [],
+    desserts: [],
+    drinks: [],
     price: 750,
+    deliveryFee: 500,
     id: 4,
   },
   {
@@ -55,17 +71,19 @@ export const foodMenus = [
 
 export const dessertsData = [
   {
-    title: 'Beef shawarma',
+    title: 'Beef Shawarma',
     icon: require('../../assets/images/beefShawarmaIcon.png'),
     image: [require('../../assets/images/BeefShawarma.png')],
     price: 750,
+    deliveryFee: 200,
     id: 1,
   },
   {
-    title: 'Chicken shawarma',
+    title: 'Chicken Shawarma',
     icon: require('../../assets/images/chickenShawarmaIcon.png'),
     image: [require('../../assets/images/ChickenShawarma1.png')],
     price: 750,
+    deliveryFee: 200,
     id: 2,
   },
   {
@@ -73,6 +91,7 @@ export const dessertsData = [
     icon: require('../../assets/images/coleslawIcon.png'),
     image: [require('../../assets/images/coleslaw1.png')],
     price: 750,
+    deliveryFee: 200,
     id: 3,
   },
 ];
@@ -91,3 +110,5 @@ export const DrinksData = [
     price: '100',
   },
 ];
+
+export const AllData = [...foodMenus, ...dessertsData, ...DrinksData];

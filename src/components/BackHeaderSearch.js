@@ -7,11 +7,9 @@ const BackHeader = ({ navigation }) => {
   const searchInputRef = useRef(TextInput);
   return (
     <View style={styles.header}>
-      {/* <View style={styles.back}> */}
       <Pressable onPress={() => navigation.goBack()} style={styles.back}>
         <Back />
       </Pressable>
-      {/* </View> */}
       <View style={styles.headerInputContainer}>
         {searchIcon && (
           <Image
@@ -50,8 +48,8 @@ const styles = StyleSheet.create({
   },
   searchIcon: {
     position: 'absolute',
-    left: 25 + '%',
-    top: 32 + '%',
+    left: 12,
+    top: 33 + '%',
     zIndex: 9,
   },
   searchInput: {

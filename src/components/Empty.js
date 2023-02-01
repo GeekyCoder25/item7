@@ -71,7 +71,11 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   contentTitle: { fontFamily: 'Poppins-Bold', fontSize: 22 },
-  contentText: { fontFamily: 'Poppins-Regular', fontSize: 18 },
+  contentText: {
+    fontFamily: 'Poppins-Regular',
+    fontSize: 18,
+    textAlign: 'center',
+  },
   button: {
     flex: 1,
     justifyContent: 'flex-end',

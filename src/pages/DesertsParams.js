@@ -12,7 +12,7 @@ import {
   useWindowDimensions,
   View,
 } from 'react-native';
-import React, { useEffect, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import Back from '../../assets/images/back.svg';
 import Like from '../../assets/images/heart.svg';
 import LikeActive from '../../assets/images/heartActive.svg';
@@ -22,11 +22,18 @@ import Minus from '../../assets/images/minus.svg';
 import Plus from '../../assets/images/plus.svg';
 import { globalStyles } from '../styles/globalStyles';
 import LinearGradient from 'react-native-linear-gradient';
+import { AppContext } from '../components/AppContext';
+import LoadingModalOverlay from '../components/LoadingModalOverlay';
 
 const DesertsParams = ({ route, navigation }) => {
+  const [modalOpen, setModalOpen] = useState(false);
   const [heartActive, setHeartActive] = useState(false);
   const [foodMenuTabActive, setFoodMenuTabActive] = useState(0);
   const [numberOfItem, setNumberOfItem] = useState(1);
+  const [additionals, setAdditionals] = useState('');
+  const { appContextState, setAppContextState, apiEndpoint } =
+    useContext(AppContext);
+  const { userProfileData, cart, favorites } = appContextState;
   useEffect(() => {
     const handleTabActive = () => {
       foodMenuTabActive === route.params.image.length - 1
@@ -43,105 +50,197 @@ const DesertsParams = ({ route, navigation }) => {
   const handleDecrement = () =>
     numberOfItem > 1 && setNumberOfItem(prev => prev - 1);
   const vh = useWindowDimensions().height;
+  const cartData = [
+    ...cart,
+    {
+      desserts: [additionals],
+      title: route.params.title,
+      price: route.params.price,
+      deliveryFee: route.params.deliveryFee || 0,
+      numberOfItem: numberOfItem,
+    },
+  ];
 
+  const handleAddToCart = async () => {
+    handleShowModal();
+    const id = userProfileData.phoneNumber;
+    const res = await fetch(`${apiEndpoint}/api/cart/${id}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(cartData),
+    });
+    await res.json();
+  };
+  const handleShowModal = () => {
+    setModalOpen(prev => !prev);
+  };
+
+  const handleFavoriteFetch = async data => {
+    const id = userProfileData.phoneNumber;
+    const res = await fetch(`${apiEndpoint}/api/favorites/${id}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ favorites: data }),
+    });
+    return res.json();
+  };
+  const handleFavorite = async () => {
+    handleShowModal();
+    if (!heartActive) {
+      handleFavoriteFetch([...favorites, route.params.title])
+        .then(() => {
+          setHeartActive(!heartActive);
+          setAppContextState({
+            ...appContextState,
+            favorites: [...favorites, route.params.title],
+          });
+          handleShowModal();
+          ToastAndroid.show('Added to Favorites', ToastAndroid.SHORT);
+        })
+        .catch(err => ToastAndroid.show(err.message, ToastAndroid.SHORT));
+    } else {
+      const updatedFavorites = favorites.filter(i => i !== route.params.title);
+      handleFavoriteFetch([...updatedFavorites])
+        .then(i => {
+          console.log(i);
+          setHeartActive(!heartActive);
+          setAppContextState({
+            ...appContextState,
+            favorites: [...updatedFavorites],
+          });
+          handleShowModal();
+          ToastAndroid.show('Removed from Favorites', ToastAndroid.SHORT);
+        })
+        .catch(err => {
+          handleShowModal();
+          console.log(err.message);
+          // ToastAndroid.show(err.message, ToastAndroid.SHORT);
+        });
+    }
+  };
   return (
-    <ImageBackground
-      source={require('../../assets/images/splashBg.png')}
-      style={globalStyles.route}
-      resizeMode="repeat">
-      <View style={styles.FoodMenuParams}>
-        <ScrollView style={styles.scrollView}>
-          <View style={styles.body}>
-            <View style={styles.header}>
-              <Pressable onPress={() => navigation.goBack()}>
-                <Back />
-              </Pressable>
-              <Pressable onPress={() => setHeartActive(!heartActive)}>
-                {heartActive ? <LikeActive /> : <Like />}
-              </Pressable>
-            </View>
-            <View
-              style={{
-                ...styles.contentContainer,
-                minHeight: vh * (93 / 100),
-              }}>
-              <Text style={styles.title}>{route.params.title}</Text>
-              <Text style={styles.price}>
-                <Text style={styles.lineThrough}>N</Text> {route.params.price}
-              </Text>
-              <View style={styles.imageContainer}>
-                <Image
-                  source={route.params.image[foodMenuTabActive]}
-                  style={styles.image}
-                  resizeMode="contain"
-                />
-                <View style={styles.tab}>
-                  {route.params.image.map(image =>
-                    foodMenuTabActive === route.params.image.indexOf(image) ? (
-                      <TabActive key={image} />
-                    ) : (
-                      <Tab key={image} />
-                    ),
-                  )}
-                </View>
+    <>
+      <ImageBackground
+        source={require('../../assets/images/splashBg.png')}
+        style={globalStyles.route}
+        resizeMode="repeat">
+        <View style={styles.FoodMenuParams}>
+          <ScrollView style={styles.scrollView}>
+            <View style={styles.body}>
+              <View style={styles.header}>
+                <Pressable onPress={() => navigation.goBack()}>
+                  <Back />
+                </Pressable>
+                <Pressable onPress={handleFavorite}>
+                  {heartActive ? <LikeActive /> : <Like />}
+                </Pressable>
               </View>
-              <View style={styles.numberofItemsContainer}>
-                <View style={styles.numberofItems}>
-                  <TouchableOpacity onPress={handleDecrement}>
-                    <Minus />
-                  </TouchableOpacity>
-                  <Text style={styles.numberOfItemText}>{numberOfItem}</Text>
-                  <TouchableOpacity onPress={handleIncrement}>
-                    <Plus />
-                  </TouchableOpacity>
-                </View>
-                <Text style={styles.numberOfItemPriceText}>
-                  <Text style={styles.lineThrough}>N</Text>{' '}
-                  {route.params.price * numberOfItem}
+              <View
+                style={{
+                  ...styles.contentContainer,
+                  minHeight: vh * (93 / 100),
+                }}>
+                <Text style={styles.title}>{route.params.title}</Text>
+                <Text style={styles.price}>
+                  <Text style={styles.lineThrough}>N</Text> {route.params.price}
                 </Text>
-              </View>
-              <View>
-                <Text style={styles.extrasHeaderText}>
-                  Special Instructions
-                </Text>
-                {/* eslint-disable-next-line react-native/no-inline-styles */}
-                <View style={{ flexDirection: 'row' }}>
-                  <TextInput
-                    style={styles.textInput}
-                    placeholder=" Add a note (e.g Choose the bigger one for me)"
-                    placeholderTextColor={'#80808080'}
-                    textAlignVertical="top"
+                <View style={styles.imageContainer}>
+                  <Image
+                    source={route.params.image[foodMenuTabActive]}
+                    style={styles.image}
+                    resizeMode="contain"
                   />
+                  <View style={styles.tab}>
+                    {route.params.image.map(image =>
+                      foodMenuTabActive ===
+                      route.params.image.indexOf(image) ? (
+                        <TabActive key={image} />
+                      ) : (
+                        <Tab key={image} />
+                      ),
+                    )}
+                  </View>
+                </View>
+                <View style={styles.numberofItemsContainer}>
+                  <View style={styles.numberofItems}>
+                    <TouchableOpacity onPress={handleDecrement}>
+                      <Minus />
+                    </TouchableOpacity>
+                    <Text style={styles.numberOfItemText}>{numberOfItem}</Text>
+                    <TouchableOpacity onPress={handleIncrement}>
+                      <Plus />
+                    </TouchableOpacity>
+                  </View>
+                  <Text style={styles.numberOfItemPriceText}>
+                    <Text style={styles.lineThrough}>N</Text>{' '}
+                    {route.params.price * numberOfItem}
+                  </Text>
+                </View>
+                <View>
+                  <Text style={styles.extrasHeaderText}>
+                    Special Instructions
+                  </Text>
+                  {/* eslint-disable-next-line react-native/no-inline-styles */}
+                  <View style={{ flexDirection: 'row' }}>
+                    <TextInput
+                      style={styles.textInput}
+                      placeholder=" Add a note (e.g Choose the bigger one for me)"
+                      placeholderTextColor={'#80808080'}
+                      textAlignVertical="top"
+                      onChangeText={text => setAdditionals(text)}
+                    />
+                  </View>
+                </View>
+                <View style={styles.buttonsContainer}>
+                  <Pressable
+                    style={styles.cartButton}
+                    onPress={() =>
+                      handleAddToCart()
+                        .then(() => {
+                          setAppContextState({
+                            ...appContextState,
+                            cart: cartData,
+                          });
+                          setNumberOfItem(1);
+                          handleShowModal();
+                          ToastAndroid.show(
+                            `${route.params.title} has been added to your cart sucessfully 🤗`,
+                            ToastAndroid.SHORT,
+                          );
+                        })
+                        .catch(err => {
+                          console.log(err);
+                          handleShowModal();
+                          ToastAndroid.show(
+                            'No internet Connection',
+                            ToastAndroid.SHORT,
+                          );
+                        })
+                    }>
+                    <LinearGradient
+                      style={styles.cartButtonLinear}
+                      start={{ x: 0.0, y: 0.25 }}
+                      end={{ x: 0.5, y: 1 }}
+                      colors={['#f78b3f', '#fcb943']}>
+                      <Text style={styles.buyButtonText}>Add to Cart</Text>
+                    </LinearGradient>
+                  </Pressable>
+                  <Pressable
+                    style={styles.buyButton}
+                    onPress={() => navigation.replace('Cart')}>
+                    <Text style={styles.buyButtonText}>Buy Now</Text>
+                  </Pressable>
                 </View>
               </View>
-              <View style={styles.buttonsContainer}>
-                <Pressable
-                  style={styles.cartButton}
-                  onPress={() =>
-                    ToastAndroid.show(
-                      `${route.params.title} has been added to your cart sucessfully 🤗`,
-                      ToastAndroid.SHORT,
-                    )
-                  }>
-                  <LinearGradient
-                    style={styles.cartButtonLinear}
-                    start={{ x: 0.0, y: 0.25 }}
-                    end={{ x: 0.5, y: 1 }}
-                    colors={['#f78b3f', '#fcb943']}>
-                    <Text style={styles.buyButtonText}>Add to Cart</Text>
-                  </LinearGradient>
-                </Pressable>
-                <Pressable
-                  style={styles.buyButton}
-                  onPress={() => navigation.replace('Cart')}>
-                  <Text style={styles.buyButtonText}>Buy Now</Text>
-                </Pressable>
-              </View>
             </View>
-          </View>
-        </ScrollView>
-      </View>
-    </ImageBackground>
+          </ScrollView>
+        </View>
+      </ImageBackground>
+      <LoadingModalOverlay
+        modalOpen={modalOpen}
+        handleShowModal={handleShowModal}
+      />
+    </>
   );
 };
 

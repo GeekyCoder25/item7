@@ -1,9 +1,11 @@
 import React from 'react';
 import {
+  Clipboard,
   ImageBackground,
   Pressable,
   StyleSheet,
   Text,
+  ToastAndroid,
   View,
 } from 'react-native';
 import { globalStyles } from '../styles/globalStyles';
@@ -35,7 +37,13 @@ const Refer = ({ navigation }) => {
           <Text style={globalStyles.fontRegular}>Share your invite code</Text>
           <View style={styles.inviteCodeContainer}>
             <Text style={globalStyles.fontBold}>{inviteCode}</Text>
-            <Text style={styles.share}>Share</Text>
+            <Pressable
+              onPress={() => {
+                Clipboard.setString(inviteCode);
+                ToastAndroid.show('Copied to Clipboard', ToastAndroid.SHORT);
+              }}>
+              <Text style={styles.share}>Share</Text>
+            </Pressable>
           </View>
           <Text style={styles.referTextGuide}>
             Share your code with friends to give them N200 off items (limited to

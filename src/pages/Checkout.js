@@ -1,5 +1,5 @@
 /* eslint-disable react-native/no-inline-styles */
-import React, { useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import {
   Alert,
   ImageBackground,
@@ -11,6 +11,7 @@ import {
   View,
   TextInput,
   Image,
+  ToastAndroid,
 } from 'react-native';
 import { globalStyles } from '../styles/globalStyles';
 import Back from '../../assets/images/back.svg';
@@ -20,14 +21,63 @@ import Promo from '../../assets/images/promo-code.svg';
 import Radio from '../../assets/images/radio-button.svg';
 import RadioSelected from '../../assets/images/radio-button-selected.svg';
 import ChevronDark from '../../assets/images/chevron-right.svg';
+import { AppContext } from '../components/AppContext';
 
 const Checkout = ({ navigation }) => {
   const [tabActive, setTabActive] = useState(0);
   const [promoCodeInputValue, setPromoCodeInputValue] = useState('');
   const [paymentMethod, setPaymentMethod] = useState('card');
   const card = 545202151201452301;
+  const { appContextState, setAppContextState, apiEndpoint } =
+    useContext(AppContext);
+  const { userProfileData, orders, cart, recents } = appContextState;
   const handlePromoApply = () => {
     Alert.alert(`Sorry ☹️ "${promoCodeInputValue}" is an Invalid Promo Code`);
+  };
+  const handleFetch = async (data, data2) => {
+    const id = userProfileData.phoneNumber;
+    const res = await fetch(`${apiEndpoint}/api/favorites/${id}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        cart: [],
+        orders: [...orders, ...data],
+        recents: [...recents, ...data2],
+      }),
+    });
+    return res.json();
+  };
+  const handlePay = () => {
+    const localOrders = [];
+    cart.map(i => {
+      if (localOrders.length > 0 && localOrders.includes(i.title)) {
+        const index = localOrders.indexOf(i.title);
+        localOrders[index - 1] = localOrders[index - 1] + 1;
+      } else {
+        localOrders.push(1);
+        localOrders.push(i.title);
+      }
+    });
+    const localRecents = [];
+    cart.map(i => {
+      if (localRecents.length > 0 && localRecents.includes(i.title)) {
+        const index = localRecents.indexOf(i.title);
+        localRecents[index] = i.title;
+      } else {
+        localRecents.push(i.title);
+      }
+    });
+    handleFetch(localOrders, localRecents)
+      .then(
+        setAppContextState({
+          ...appContextState,
+          cart: [],
+          orders: [...orders, ...localOrders],
+          recents: [...recents, ...localRecents],
+        }),
+      )
+      .then(console.log(appContextState), navigation.navigate('Congrats'))
+      .catch(err => ToastAndroid.show(err.message, ToastAndroid.SHORT));
   };
   return (
     <ImageBackground
@@ -180,9 +230,7 @@ const Checkout = ({ navigation }) => {
             </View>
           </View>
           <View style={styles.button}>
-            <Pressable
-              style={styles.buttonBackground}
-              onPress={() => navigation.navigate('Congrats')}>
+            <Pressable style={styles.buttonBackground} onPress={handlePay}>
               <Text style={styles.buttonBackgroundText}>Pay now</Text>
             </Pressable>
           </View>

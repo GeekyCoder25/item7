@@ -23,14 +23,37 @@ import Language from '../../assets/images/language.svg';
 import Notifications from '../../assets/images/notification.svg';
 import Logout from '../../assets/images/logout.svg';
 import { useContext } from 'react/cjs/react.development';
-import { AppContext } from './AppContext';
+import { AppContext } from '../components/AppContext';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const Profile = ({ navigation }) => {
   const vw = useWindowDimensions().width;
-  const firstname = 'Qoreeb';
-  const { appContextState } = useContext(AppContext);
-  const { userLoggedIn } = appContextState;
+  const { appContextState, setAppContextState } = useContext(AppContext);
+  const { userLoggedIn, userProfileData } = appContextState;
+  const firstname = userProfileData.firstName;
+  console.log(appContextState);
+  const handleLogout = () => {
+    navigation.navigate('Home');
+    AsyncStorage.setItem('loggedIn', 'false');
+    AsyncStorage.removeItem('phoneNumber');
+    AsyncStorage.removeItem('firstName');
+    setAppContextState({
+      userLoggedIn: false,
+      userProfileData: {},
+      cart: [],
+      favorites: [],
+      orders: [],
+      notifications: {
+        no: 0,
+        messages: [],
+      },
+      popular: [],
+      recents: [],
+      userInfo: [],
+    });
+  };
   return (
+    // debugger;
     <View style={styles.route}>
       {/* <ScrollView> */}
       <View style={styles.header}>
@@ -43,7 +66,10 @@ const Profile = ({ navigation }) => {
             <Text style={styles.headerHelpText}>Help</Text>
           </View>
         </View>
-        <Text style={styles.hello}>Hello, {firstname}</Text>
+        <Text style={styles.hello}>
+          Hello
+          {userLoggedIn ? `, ${firstname}` : ''}
+        </Text>
       </View>
       <ImageBackground
         source={require('../../assets/images/splashBg.png')}
@@ -65,9 +91,7 @@ const Profile = ({ navigation }) => {
             />
           ))}
           {userLoggedIn ? (
-            <Pressable
-              onPress={() => navigation.navigate('Home')}
-              style={styles.logout}>
+            <Pressable onPress={handleLogout} style={styles.logout}>
               <View style={styles.link}>
                 <View style={styles.linkTextContainer}>
                   <Logout />
@@ -135,6 +159,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
     color: '#fff',
     fontFamily: 'Poppins-SemiBold',
+    textTransform: 'capitalize',
   },
   body: {
     display: 'flex',

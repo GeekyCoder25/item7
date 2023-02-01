@@ -1,5 +1,5 @@
-import { useNavigation } from '@react-navigation/native';
-import React, { useRef, useState } from 'react';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
+import React, { useContext, useEffect, useRef, useState } from 'react';
 import {
   ScrollView,
   Image,
@@ -17,16 +17,23 @@ import FoodMenu from '../components/FoodMenu';
 import Popular from '../components/Popular';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import ButtomTab from '../components/ButtomTab';
+import { AppContext } from '../components/AppContext';
 const Home = ({ navigation, route }) => {
+  const { appContextState } = useContext(AppContext);
+  const { userProfileData, userLoggedIn, notifications } = appContextState;
+  const firstname = userProfileData.firstName;
   const [searchIcon, setSearchIcon] = useState(true);
-  const [notificationActive /* setNotificationActive*/] = useState(false);
+  const [notificationActive, setNotificationActive] = useState(false);
   const searchInputRef = useRef(TextInput);
   const navigator = useNavigation();
-
+  const { no } = notifications;
   const clearAsyncStorage = () => {
     // console.log(showAsyncStorageContentInDev());
     AsyncStorage.clear();
   };
+  useEffect(() => {
+    setNotificationActive(true);
+  }, [no]);
   return (
     <>
       <ImageBackground
@@ -62,13 +69,14 @@ const Home = ({ navigation, route }) => {
               <View style={styles.profileIconContainer}>
                 <Pressable onPress={() => navigator.navigate('Refer')}>
                   <Image
-                    source={
-                      notificationActive
-                        ? require('../../assets/images/notificationIconActive.png')
-                        : require('../../assets/images/notificationIcon.png')
-                    }
+                    source={require('../../assets/images/notificationIcon.png')}
                     style={styles.profileIcon}
                   />
+                  {notificationActive && (
+                    <View style={styles.notificationActive}>
+                      <Text style={styles.notificationActiveText}>{no}</Text>
+                    </View>
+                  )}
                 </Pressable>
               </View>
             </View>
@@ -80,12 +88,15 @@ const Home = ({ navigation, route }) => {
               </Pressable>
             </View>
             <View style={styles.welcome}>
-              <Text style={styles.welcomeText}>Welcome 👋</Text>
+              <Text style={styles.welcomeText}>
+                Welcome {userLoggedIn && firstname}👋
+              </Text>
               <Text style={styles.welcomeTextSub}>Eat more, pay less</Text>
             </View>
             <FoodMenu navigation={navigation} />
-            <Popular navigation={navigation} />
-            <Popular navigation={navigation} />
+            <Popular navigation={navigation} title="Popular" />
+            <Popular navigation={navigation} title="Recently Bought" />
+            <Popular navigation={navigation} title="Favorites" />
           </ScrollView>
         </View>
       </ImageBackground>
@@ -120,8 +131,8 @@ const styles = StyleSheet.create({
   },
   searchIcon: {
     position: 'absolute',
-    left: 18 + '%',
-    top: 30 + '%',
+    left: 12,
+    top: 35 + '%',
     zIndex: 9,
   },
   searchInput: {
@@ -131,6 +142,23 @@ const styles = StyleSheet.create({
     flex: 1,
     textAlign: 'center',
     width: 100 + '%',
+  },
+  notificationActive: {
+    position: 'absolute',
+    right: -5,
+    top: -10,
+    backgroundColor: '#fff',
+    borderRadius: 20,
+    width: 20,
+    height: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  notificationActiveText: {
+    color: globalStyles.themeColorSolo,
+    fontSize: 20,
+    fontFamily: 'Poppins-SemiBold',
+    marginTop: -2,
   },
   address: {
     marginVertical: 20,

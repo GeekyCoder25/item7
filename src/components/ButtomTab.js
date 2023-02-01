@@ -22,7 +22,6 @@ const ButtomTab = ({ navigation, route }) => {
         <Image
           source={require('../../assets/images/bottomTab.png')}
           style={{
-            ...styles.bottomTabImage,
             minWidth: useWindowDimensions().width,
           }}
           resizeMode="stretch"
@@ -34,27 +33,27 @@ const ButtomTab = ({ navigation, route }) => {
         onPress={() => navigation.navigate('Cart')}>
         <BottomTabCart />
       </TouchableOpacity>
-      {route.name === 'Home' ? (
-        <Pressable
-          style={styles.bottomTabHome}
-          onPress={() => navigation.navigate('Home')}>
-          <BottomTabHomeActive />
-          <Text
-            style={{
-              ...globalStyles.themeColor,
-              ...globalStyles.fontRegular,
-            }}>
-            Home
-          </Text>
-        </Pressable>
-      ) : (
-        <Pressable
-          style={styles.bottomTabHome}
-          onPress={() => navigation.navigate('Home')}>
-          <BottomTabHome />
-          <Text style={globalStyles.fontRegular}>Home</Text>
-        </Pressable>
-      )}
+      <Pressable
+        style={styles.bottomTabHome}
+        onPress={() => navigation.navigate('Home')}>
+        {route.name === 'Home' ? (
+          <>
+            <BottomTabHomeActive />
+            <Text
+              style={{
+                ...globalStyles.themeColor,
+                ...globalStyles.fontRegular,
+              }}>
+              Home
+            </Text>
+          </>
+        ) : (
+          <>
+            <BottomTabHome />
+            <Text style={globalStyles.fontRegular}>Home</Text>
+          </>
+        )}
+      </Pressable>
       <Pressable
         style={styles.bottomTabOrder}
         onPress={() => navigation.navigate('Myorders')}>

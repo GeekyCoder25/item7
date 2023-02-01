@@ -11,7 +11,7 @@ import {
   useWindowDimensions,
   View,
 } from 'react-native';
-import React, { useEffect, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import Back from '../../assets/images/back.svg';
 import Like from '../../assets/images/heart.svg';
 import LikeActive from '../../assets/images/heartActive.svg';
@@ -26,12 +26,23 @@ import ExtraPlus from '../../assets/images/extrasAdd.svg';
 import ExtrasListIcon from '../../assets/images/extrasListIcon.svg';
 import ExtrasListIconActive from '../../assets/images/extrasListIconActive.svg';
 import LinearGradient from 'react-native-linear-gradient';
+import { AppContext } from '../components/AppContext';
+import LoadingModalOverlay from '../components/LoadingModalOverlay';
 
 const FoodMenuParams = ({ route, navigation }) => {
+  const [modalOpen, setModalOpen] = useState(false);
   const [heartActive, setHeartActive] = useState(false);
   const [foodMenuTabActive, setFoodMenuTabActive] = useState(0);
   const [numberOfItem, setNumberOfItem] = useState(1);
   const [extrasExpanded, setExtasExpanded] = useState(true);
+  const { appContextState, setAppContextState, apiEndpoint } =
+    useContext(AppContext);
+  const { userProfileData, cart, favorites } = appContextState;
+  const [additionals, setAdditionals] = useState([]);
+  const [desserts, setDesserts] = useState([]);
+  const [drinks, setDrinks] = useState([]);
+  const [price, setPrice] = useState([]);
+  const [addedPrice, setAddedPrice] = useState([]);
 
   useEffect(() => {
     const handleTabActive = () => {
@@ -49,131 +60,245 @@ const FoodMenuParams = ({ route, navigation }) => {
   const handleDecrement = () =>
     numberOfItem > 1 && setNumberOfItem(prev => prev - 1);
   const vh = useWindowDimensions().height;
-  const handleFavorite = () => {
-    setHeartActive(!heartActive);
-    heartActive
-      ? ToastAndroid.show('Removed from Favorites', ToastAndroid.SHORT)
-      : ToastAndroid.show('Added to Favorites', ToastAndroid.SHORT);
+  useEffect(() => {
+    favorites.includes(route.params.title) && setHeartActive(true);
+  }, [favorites, route.params.title]);
+  const handleFavoriteFetch = async data => {
+    const id = userProfileData.phoneNumber;
+    const res = await fetch(`${apiEndpoint}/api/favorites/${id}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ favorites: data }),
+    });
+    return res.json();
+  };
+  const handleFavorite = async () => {
+    handleShowModal();
+    if (!heartActive) {
+      handleFavoriteFetch([...favorites, route.params.title])
+        .then(() => {
+          setHeartActive(!heartActive);
+          setAppContextState({
+            ...appContextState,
+            favorites: [...favorites, route.params.title],
+          });
+          handleShowModal();
+          ToastAndroid.show('Added to Favorites', ToastAndroid.SHORT);
+        })
+        .catch(err => ToastAndroid.show(err.message, ToastAndroid.SHORT));
+    } else {
+      const updatedFavorites = favorites.filter(i => i !== route.params.title);
+      handleFavoriteFetch([...updatedFavorites])
+        .then(i => {
+          console.log(i);
+          setHeartActive(!heartActive);
+          setAppContextState({
+            ...appContextState,
+            favorites: [...updatedFavorites],
+          });
+          handleShowModal();
+          ToastAndroid.show('Removed from Favorites', ToastAndroid.SHORT);
+        })
+        .catch(err => {
+          handleShowModal();
+          console.log(err.message);
+          // ToastAndroid.show(err.message, ToastAndroid.SHORT);
+        });
+    }
+  };
+  useEffect(() => {
+    if (price.length < 1) {
+      setAddedPrice(0);
+    } else if (price.length < 2) {
+      setAddedPrice(price[0]);
+      // additionals
+    } else {
+      setAddedPrice(price.reduce((a, b) => a + b));
+    }
+  }, [price]);
+  const cartData = [
+    ...cart,
+    {
+      additionals,
+      desserts,
+      drinks,
+      title: route.params.title,
+      price: route.params.price + addedPrice,
+      deliveryFee: route.params.deliveryFee || 0,
+      numberOfItem: numberOfItem,
+    },
+  ];
+
+  const handleAddToCart = async () => {
+    handleShowModal();
+    const id = userProfileData.phoneNumber;
+    const res = await fetch(`${apiEndpoint}/api/cart/${id}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(cartData),
+    });
+    await res.json();
+  };
+
+  const handleShowModal = () => {
+    setModalOpen(prev => !prev);
   };
   const extrasData = [
     {
       title: 'Extra Fish',
-      price: '200',
+      price: 200,
     },
     {
       title: 'Extra Rice',
-      price: '200',
+      price: 200,
     },
     {
       title: 'Extra Beef',
-      price: '50',
+      price: 50,
     },
     {
       title: 'Extra Plantain',
-      price: '200',
+      price: 200,
     },
   ];
   return (
-    <ImageBackground
-      source={require('../../assets/images/splashBg.png')}
-      style={globalStyles.route}
-      resizeMode="repeat">
-      <View style={styles.FoodMenuParams}>
-        <ScrollView style={styles.scrollView}>
-          <View style={styles.body}>
-            <View style={styles.header}>
-              <Pressable onPress={() => navigation.goBack()}>
-                <Back />
-              </Pressable>
-              <Pressable onPress={handleFavorite}>
-                {heartActive ? <LikeActive /> : <Like />}
-              </Pressable>
-            </View>
-            <View
-              style={{
-                ...styles.contentContainer,
-                minHeight: vh * (93 / 100),
-              }}>
-              <Text style={styles.title}>{route.params.title}</Text>
-              <Text style={styles.price}>
-                <Text style={styles.lineThrough}>N</Text> {route.params.price}
-              </Text>
-              <View style={styles.imageContainer}>
-                <Image
-                  source={route.params.image[foodMenuTabActive]}
-                  style={styles.image}
-                  resizeMode="contain"
-                />
-                <View style={styles.tab}>
-                  {route.params.image.map(image =>
-                    foodMenuTabActive === route.params.image.indexOf(image) ? (
-                      <TabActive key={image} />
-                    ) : (
-                      <Tab key={image} />
-                    ),
+    <>
+      <ImageBackground
+        source={require('../../assets/images/splashBg.png')}
+        style={globalStyles.route}
+        resizeMode="repeat">
+        <View style={styles.FoodMenuParams}>
+          <ScrollView style={styles.scrollView}>
+            <View style={styles.body}>
+              <View style={styles.header}>
+                <Pressable onPress={() => navigation.goBack()}>
+                  <Back />
+                </Pressable>
+                <Pressable onPress={handleFavorite}>
+                  {heartActive ? <LikeActive /> : <Like />}
+                </Pressable>
+              </View>
+              <View
+                style={{
+                  ...styles.contentContainer,
+                  minHeight: vh * (93 / 100),
+                }}>
+                <Text style={styles.title}>{route.params.title}</Text>
+                <Text style={styles.price}>
+                  <Text style={styles.lineThrough}>N</Text> {route.params.price}
+                </Text>
+                <View style={styles.imageContainer}>
+                  <Image
+                    source={route.params.image[foodMenuTabActive]}
+                    style={styles.image}
+                    resizeMode="contain"
+                  />
+                  <View style={styles.tab}>
+                    {route.params.image.map(image =>
+                      foodMenuTabActive ===
+                      route.params.image.indexOf(image) ? (
+                        <TabActive key={image} />
+                      ) : (
+                        <Tab key={image} />
+                      ),
+                    )}
+                  </View>
+                </View>
+                <View style={styles.numberofItemsContainer}>
+                  <View style={styles.numberofItems}>
+                    <TouchableOpacity onPress={handleDecrement}>
+                      <Minus />
+                    </TouchableOpacity>
+                    <Text style={styles.numberOfItemText}>{numberOfItem}</Text>
+                    <TouchableOpacity onPress={handleIncrement}>
+                      <Plus />
+                    </TouchableOpacity>
+                  </View>
+                  <Text style={styles.numberOfItemPriceText}>
+                    <Text style={styles.lineThrough}>N</Text>{' '}
+                    {route.params.price * numberOfItem}
+                  </Text>
+                </View>
+                <View style={styles.extras}>
+                  <View style={styles.extrasHeader}>
+                    <Text style={styles.extrasHeaderText}>Extras</Text>
+                    <Pressable
+                      onPress={() => setExtasExpanded(!extrasExpanded)}
+                      style={styles.chevron}>
+                      {extrasExpanded ? <ChevronDown /> : <ChevronUp />}
+                    </Pressable>
+                  </View>
+                  {extrasExpanded && (
+                    <View>
+                      {extrasData.map(data => (
+                        <Extras
+                          key={data.title}
+                          data={data}
+                          additionals={additionals}
+                          setAdditionals={setAdditionals}
+                          desserts={desserts}
+                          drinks={drinks}
+                          price={price}
+                          setPrice={setPrice}
+                        />
+                      ))}
+                    </View>
                   )}
                 </View>
-              </View>
-              <View style={styles.numberofItemsContainer}>
-                <View style={styles.numberofItems}>
-                  <TouchableOpacity onPress={handleDecrement}>
-                    <Minus />
-                  </TouchableOpacity>
-                  <Text style={styles.numberOfItemText}>{numberOfItem}</Text>
-                  <TouchableOpacity onPress={handleIncrement}>
-                    <Plus />
-                  </TouchableOpacity>
-                </View>
-                <Text style={styles.numberOfItemPriceText}>
-                  <Text style={styles.lineThrough}>N</Text>{' '}
-                  {route.params.price * numberOfItem}
-                </Text>
-              </View>
-              <View style={styles.extras}>
-                <View style={styles.extrasHeader}>
-                  <Text style={styles.extrasHeaderText}>Extras</Text>
+                <View style={styles.buttonsContainer}>
                   <Pressable
-                    onPress={() => setExtasExpanded(!extrasExpanded)}
-                    style={styles.chevron}>
-                    {extrasExpanded ? <ChevronDown /> : <ChevronUp />}
+                    style={styles.cartButton}
+                    onPress={() =>
+                      handleAddToCart()
+                        .then(() => {
+                          setAppContextState({
+                            ...appContextState,
+                            cart: cartData,
+                          });
+                          setNumberOfItem(1);
+                          setAdditionals([]);
+                          setPrice([]);
+                          setExtasExpanded(false);
+                          setExtasExpanded(true);
+                          handleShowModal();
+                          ToastAndroid.show(
+                            `${route.params.title} has been added to your cart sucessfully 🤗`,
+                            ToastAndroid.SHORT,
+                          );
+                        })
+                        .catch(err => {
+                          console.log(err);
+                          handleShowModal();
+                          ToastAndroid.show(
+                            'No internet Connection',
+                            ToastAndroid.SHORT,
+                          );
+                        })
+                    }>
+                    <LinearGradient
+                      style={styles.cartButtonLinear}
+                      start={{ x: 0.0, y: 0.25 }}
+                      end={{ x: 0.5, y: 1 }}
+                      colors={['#f78b3f', '#fcb943']}>
+                      <Text style={styles.buyButtonText}>Add to Cart</Text>
+                    </LinearGradient>
+                  </Pressable>
+                  <Pressable
+                    style={styles.buyButton}
+                    onPress={() => navigation.navigate('MoreOptions')}>
+                    <Text style={styles.buyButtonText}>Buy Now</Text>
                   </Pressable>
                 </View>
-                {extrasExpanded && (
-                  <View>
-                    {extrasData.map(data => (
-                      <Extras data={data} key={data.title} />
-                    ))}
-                  </View>
-                )}
-              </View>
-              <View style={styles.buttonsContainer}>
-                <Pressable
-                  style={styles.cartButton}
-                  onPress={() =>
-                    ToastAndroid.show(
-                      `${route.params.title} has been added to your cart sucessfully 🤗`,
-                      ToastAndroid.SHORT,
-                    )
-                  }>
-                  <LinearGradient
-                    style={styles.cartButtonLinear}
-                    start={{ x: 0.0, y: 0.25 }}
-                    end={{ x: 0.5, y: 1 }}
-                    colors={['#f78b3f', '#fcb943']}>
-                    <Text style={styles.buyButtonText}>Add to Cart</Text>
-                  </LinearGradient>
-                </Pressable>
-                <Pressable
-                  style={styles.buyButton}
-                  onPress={() => navigation.navigate('MoreOptions')}>
-                  <Text style={styles.buyButtonText}>Buy Now</Text>
-                </Pressable>
               </View>
             </View>
-          </View>
-        </ScrollView>
-      </View>
-    </ImageBackground>
+          </ScrollView>
+        </View>
+      </ImageBackground>
+      <LoadingModalOverlay
+        modalOpen={modalOpen}
+        handleShowModal={handleShowModal}
+      />
+    </>
   );
 };
 
@@ -329,22 +454,46 @@ const styles = StyleSheet.create({
 });
 export default FoodMenuParams;
 
-const Extras = ({ data }) => {
+const Extras = ({ data, additionals, setAdditionals, price, setPrice }) => {
   const [numberOfItem, setNumberOfItem] = useState(0);
   const [selected, setSelected] = useState(false);
 
   const handleSelected = () => {
     setSelected(!selected);
-    selected ? setNumberOfItem(0) : setNumberOfItem(1);
+    selected ? handleDecrement() : handleIncrement();
   };
   const handleIncrement = () => {
-    numberOfItem < 20
-      ? setNumberOfItem(prev => prev + 1)
-      : Alert.alert('Maximum Order is 20 at a time!');
+    if (numberOfItem < 20) {
+      setNumberOfItem(prev => prev + 1);
+      if (numberOfItem > 0 && additionals.includes(data.title)) {
+        const index = additionals.indexOf(data.title);
+        additionals[index - 1] = numberOfItem + 1;
+      } else {
+        additionals.push(1);
+        additionals.push(data.title);
+      }
+      setAdditionals(oldArray => [...oldArray]);
+      price.push(data.price);
+      setPrice(oldArray => [...oldArray]);
+    } else {
+      Alert.alert('Maximum Order is 20 at a time!');
+    }
     numberOfItem > -1 ? setSelected(true) : setSelected(false);
   };
   const handleDecrement = () => {
-    numberOfItem > 0 && setNumberOfItem(prev => prev - 1);
+    if (numberOfItem > 0) {
+      setNumberOfItem(prev => prev - 1);
+    }
+    if (numberOfItem > 1 && additionals.includes(data.title)) {
+      const index = additionals.indexOf(data.title);
+      additionals[index - 1] = numberOfItem - 1;
+    } else {
+      const index = additionals.indexOf(data.title);
+      additionals.splice(index - 1, 2);
+    }
+    setAdditionals(oldArray => [...oldArray]);
+    price.pop(data.price);
+    setPrice(oldArray => [...oldArray]);
     numberOfItem > 1 ? setSelected(true) : setSelected(false);
   };
 

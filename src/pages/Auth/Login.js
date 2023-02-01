@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useContext, useEffect, useRef, useState } from 'react';
 import {
   ImageBackground,
   Pressable,
@@ -16,10 +16,100 @@ import Lock from '../../../assets/images/lock.svg';
 import Eye from '../../../assets/images/eyeLogin.svg';
 import Google from '../../../assets/images/google.svg';
 import { globalStyles } from '../../styles/globalStyles';
+import Icon from 'react-native-vector-icons/FontAwesome';
+import { AppContext } from '../../components/AppContext';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const Login = ({ navigation }) => {
-  const handleLogin = () => {};
+  const [showPassword, setShowPassword] = useState(true);
+  const passwordInputRef = useRef(TextInput);
+  const [errorMessage, setErrorMessage] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [dot, setDot] = useState('.');
+  const { setAppContextState, apiEndpoint } = useContext(AppContext);
+  const [formData, setFormData] = useState({
+    phoneNumber: '',
+    password: '',
+  });
+  const handleLogin = () => {
+    setLoading(true);
+    editInput();
+    const emptyInputCheck = [];
+    Object.values(formData).forEach(value =>
+      emptyInputCheck.push(value === ''),
+    );
+    if (emptyInputCheck.includes(true)) {
+      setErrorMessage('Please input all required fields');
+      setLoading(false);
+    } else {
+      const loginAccount = async () => {
+        const res = await fetch(`${apiEndpoint}/api/auth/user`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(formData),
+        });
+        const data = await res.json();
+        return data;
+      };
+      loginAccount()
+        .then(data => {
+          if (typeof data === 'string') {
+            setErrorMessage(data);
+            setLoading(false);
+          } else {
+            setSuccessMessage('Login Successful');
+            saveAsyncStorage(data);
+          }
+        })
+        .catch(err => {
+          console.log(err);
+          setErrorMessage(
+            "Couldn't connect to server, check your internet connection",
+          );
+          setLoading(false);
+        });
+    }
+  };
+  const saveAsyncStorage = async data => {
+    try {
+      const userProfileData = data.data;
+      await AsyncStorage.setItem('loggedIn', 'true');
+      await AsyncStorage.setItem('firstName', userProfileData.firstName);
+      await AsyncStorage.setItem('phoneNumber', userProfileData.phoneNumber);
+      const fetchUserData = async () => {
+        const id = userProfileData.phoneNumber;
+        const res = await fetch(`${apiEndpoint}/api/userData/${id}`);
+        return await res.json();
+      };
+      await fetchUserData().then(result => {
+        setAppContextState({
+          userLoggedIn: true,
+          userProfileData,
+          ...result,
+        });
+        console.log(result);
+        navigation.replace('Home');
+      });
+    } catch (err) {
+      console.log(err);
+    }
+  };
   const vh = useWindowDimensions().height;
+  const handleShowPassword = () => {
+    setShowPassword(prev => !prev);
+  };
+  const editInput = () => {
+    setErrorMessage('');
+    setSuccessMessage('');
+  };
+  useEffect(() => {
+    loading
+      ? setTimeout(() => {
+          dot === '....' ? setDot('.') : setDot(dot + '.');
+        }, 1000)
+      : setDot('.');
+  }, [loading, dot]);
   return (
     <ImageBackground
       source={require('../../../assets/images/splashBg.png')}
@@ -28,7 +118,7 @@ const Login = ({ navigation }) => {
       <ScrollView style={styles.route}>
         <View style={{ minHeight: vh * (93 / 100) }}>
           <View style={styles.header}>
-            <Pressable onPress={() => navigation.goBack()}>
+            <Pressable onPress={() => navigation.navigate('Signup')}>
               <Back />
             </Pressable>
             <View style={styles.headerTitleContainer}>
@@ -47,8 +137,15 @@ const Login = ({ navigation }) => {
               </View>
               <TextInput
                 style={styles.textInput}
-                placeholder="Enter your phone number or email here"
+                placeholder="Enter your phone number here"
                 placeholderTextColor={'#80808080'}
+                onChangeText={text => {
+                  setFormData(prev => {
+                    return { ...prev, phoneNumber: text };
+                  });
+                  editInput();
+                }}
+                keyboardType="phone-pad"
               />
             </View>
             <View style={styles.textInputContainer}>
@@ -59,10 +156,48 @@ const Login = ({ navigation }) => {
                 style={styles.textInput}
                 placeholder="Enter your password here"
                 placeholderTextColor={'#80808080'}
+                name="password"
+                secureTextEntry={showPassword}
+                autoCapitalize="none"
+                autoCorrect={false}
+                onChangeText={text => {
+                  setFormData(prev => {
+                    return { ...prev, password: text };
+                  });
+                  editInput();
+                }}
+                ref={passwordInputRef}
               />
-              <View style={styles.eye}>
-                <Eye />
-              </View>
+              <Pressable onPress={handleShowPassword}>
+                <View style={styles.eye}>
+                  <Eye />
+                </View>
+              </Pressable>
+            </View>
+            <View style={styles.errorMessage}>
+              {errorMessage && (
+                <>
+                  <Icon
+                    name="warning"
+                    size={15}
+                    color={globalStyles.themeColorSolo}
+                  />
+                  <Text style={styles.errorMessageText}>
+                    {errorMessage},{' '}
+                    {errorMessage.includes('exist') && (
+                      <Text
+                        onPress={() => navigation.replace('Signup')}
+                        style={styles.questionTextLink}>
+                        Sign up
+                      </Text>
+                    )}
+                  </Text>
+                </>
+              )}
+              {successMessage && (
+                <Icon name="check-circle" size={20} color="green" />
+              )}
+              <Text style={styles.successMessageText}>{successMessage}</Text>
             </View>
             <Text style={styles.TandC}>
               <Text style={styles.TandColor}>Forgot Password?</Text>
@@ -90,8 +225,17 @@ const Login = ({ navigation }) => {
             </Text>
           </View>
           <View style={styles.button}>
-            <Pressable style={styles.buttonBackground} onPress={handleLogin}>
-              <Text style={styles.buttonBackgroundText}>Log In </Text>
+            <Pressable
+              style={styles.buttonBackground}
+              onPress={loading ? null : handleLogin}>
+              {!loading ? (
+                <Text style={styles.buttonBackgroundText}>Log In </Text>
+              ) : (
+                <Text style={styles.buttonBackgroundText}>
+                  Logging In
+                  <Text style={styles.dots}>{dot}</Text>
+                </Text>
+              )}
             </Pressable>
           </View>
         </View>
@@ -155,6 +299,25 @@ const styles = StyleSheet.create({
     right: 10,
     zIndex: 9,
     top: 35 + '%',
+  },
+  errorMessage: {
+    flexDirection: 'row',
+    top: -20,
+  },
+  errorMessageText: {
+    marginLeft: 5,
+    fontSize: 13,
+    fontFamily: 'Poppins-Regular',
+    color: globalStyles.themeColorSolo,
+    textAlign: 'center',
+  },
+  successMessageText: {
+    marginLeft: 5,
+    fontSize: 13,
+    marginTop: 2,
+    fontFamily: 'Poppins-Regular',
+    color: 'green',
+    textAlign: 'center',
   },
   TandC: {
     textAlign: 'left',
@@ -223,6 +386,10 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 18,
     fontFamily: 'Poppins-Regular',
+  },
+  dots: {
+    fontSize: 30,
+    marginBottom: 500,
   },
 });
 export default Login;

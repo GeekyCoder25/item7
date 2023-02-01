@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import {
   Image,
   Pressable,
@@ -8,70 +8,103 @@ import {
   useWindowDimensions,
   View,
 } from 'react-native';
+import { AllData } from '../data/db';
 import { globalStyles } from '../styles/globalStyles';
-const Popular = ({ navigation }) => {
+import { AppContext } from './AppContext';
+const Popular = ({ navigation, title }) => {
+  const [selectedTab, setSelectedTab] = useState([]);
+  const { appContextState } = useContext(AppContext);
   const { width: screenWidth } = useWindowDimensions();
-  const popularTabs = [
-    {
-      image: [
-        require('../../assets/images/aPlateWithChicken1.png'),
-        require('../../assets/images/aPlateWithChicken2.png'),
-      ],
-      title: 'A Plate with Chicken',
-      price: 1000,
-    },
-    {
-      image: [require('../../assets/images/ChickenShawarma1.png')],
-      title: 'Chicken Shawarma',
-      price: 1200,
-    },
-    {
-      image: [require('../../assets/images/BeefShawarma.png')],
-      title: 'Beef Shawarma',
-      price: 2700,
-    },
-    {
-      image: [require('../../assets/images/aPlateWithCroakerFish1.png')],
-      title: 'A Plate with Croaker Fish',
-      price: 1150,
-    },
-    {
-      image: [
-        require('../../assets/images/aPlateWithBeef1.png'),
-        require('../../assets/images/aPlateWithBeef2.png'),
-      ],
-      title: 'A Plate with Beef',
-      price: 600,
-    },
-  ];
+  useEffect(() => {
+    const popularTabs = [
+      {
+        image: [
+          require('../../assets/images/aPlateWithChicken1.png'),
+          require('../../assets/images/aPlateWithChicken2.png'),
+        ],
+        title: 'A Plate with Chicken',
+        price: 1000,
+      },
+      {
+        image: [require('../../assets/images/ChickenShawarma1.png')],
+        title: 'Chicken Shawarma',
+        price: 1200,
+      },
+      {
+        image: [require('../../assets/images/BeefShawarma.png')],
+        title: 'Beef Shawarma',
+        price: 2700,
+      },
+      {
+        image: [require('../../assets/images/aPlateWithCroakerFish1.png')],
+        title: 'A Plate with Croaker Fish',
+        price: 1150,
+      },
+      {
+        image: [require('../../assets/images/aPlateWithFish1.png')],
+        title: 'A Plate with Fish',
+        price: 1150,
+      },
+      {
+        image: [
+          require('../../assets/images/aPlateWithBeef1.png'),
+          require('../../assets/images/aPlateWithBeef2.png'),
+        ],
+        title: 'A Plate with Beef',
+        price: 600,
+      },
+    ];
+    if (title === 'Popular') {
+      setSelectedTab(popularTabs);
+    } else if (title === 'Favorites') {
+      let favorites = appContextState.favorites;
+      favorites = favorites.map(i => i.toLowerCase());
+      const favoriteTabs = [];
+      AllData.forEach(popular => {
+        favorites.includes(popular.title.toLowerCase()) &&
+          favoriteTabs.push(popular);
+      });
+      setSelectedTab(favoriteTabs.reverse());
+    } else if (title === 'Recently Bought') {
+      const recentTabs = [];
+      let recents = appContextState.recents;
+      recents = recents.map(i => i.toLowerCase());
+      AllData.forEach(data => {
+        recents.includes(data.title.toLowerCase()) && recentTabs.push(data);
+      });
+      setSelectedTab(recentTabs);
+    }
+  }, [appContextState.favorites, appContextState.recents, title]);
   return (
-    <View style={styles.foodMenuFullContainer}>
-      <View style={styles.foodMenuContainer}>
-        <Text style={styles.foodMenuContainerHeader}>Popular</Text>
-      </View>
-      <ScrollView horizontal={true} showsHorizontalScrollIndicator={false}>
-        <View style={{ ...styles.foodMenu, minWidth: screenWidth }}>
-          {popularTabs.map(foodMenu => (
-            <Pressable
-              onPress={() => navigation.navigate('FoodMenuParams', foodMenu)}
-              style={styles.foodMenuTitleContainer}
-              key={foodMenu.title}>
-              <View style={styles.popularContainer}>
-                <Image
-                  source={foodMenu.image[0]}
-                  style={styles.popularImage}
-                  resizeMode="cover"
-                />
-              </View>
-              <Text style={styles.foodMenuTitle}>{foodMenu.title}</Text>
-              <Text style={styles.popularPrice}>
-                <Text style={styles.lineThrough}>N</Text> {foodMenu.price}
-              </Text>
-            </Pressable>
-          ))}
+    selectedTab.length > 0 && (
+      <View style={styles.foodMenuFullContainer}>
+        <View style={styles.foodMenuContainer}>
+          <Text style={styles.foodMenuContainerHeader}>{title}</Text>
         </View>
-      </ScrollView>
-    </View>
+        <ScrollView horizontal={true} showsHorizontalScrollIndicator={false}>
+          <View style={{ ...styles.foodMenu, minWidth: screenWidth }}>
+            {selectedTab.reverse().map(foodMenu => (
+              <Pressable
+                onPress={() => navigation.navigate('FoodMenuParams', foodMenu)}
+                style={styles.foodMenuTitleContainer}
+                key={foodMenu.title}>
+                <View style={styles.popularContainer}>
+                  <Image
+                    source={foodMenu.image[0]}
+                    style={styles.popularImage}
+                    resizeMode="cover"
+                  />
+                </View>
+                <Text style={styles.foodMenuTitle}>{foodMenu.title}</Text>
+                <Text style={styles.popularPrice}>
+                  <Text style={styles.lineThrough}>N</Text> {foodMenu.price}
+                </Text>
+              </Pressable>
+            ))}
+          </View>
+        </ScrollView>
+      </View>
+    )
   );
 };
 export default Popular;
@@ -96,7 +129,6 @@ const styles = StyleSheet.create({
   foodMenu: {
     flexDirection: 'row',
     marginVertical: 30,
-    justifyContent: 'space-evenly',
   },
   foodMenuTitleContainer: {
     marginHorizontal: 10,

@@ -1,5 +1,5 @@
 /* eslint-disable react-native/no-inline-styles */
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import {
   Alert,
   ImageBackground,
@@ -10,8 +10,9 @@ import {
   ScrollView,
   TouchableOpacity,
   View,
-  Animated,
   Vibration,
+  Modal,
+  ActivityIndicator,
 } from 'react-native';
 import Empty from '../components/Empty';
 import CartImage from '../../assets/images/cartImage.svg';
@@ -21,18 +22,78 @@ import Minus from '../../assets/images/cartMinus.svg';
 import Plus from '../../assets/images/plus.svg';
 import Delete from '../../assets/images/deleteCart.svg';
 import { globalStyles } from '../styles/globalStyles';
+import { AppContext } from '../components/AppContext';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useFocusEffect } from '@react-navigation/native';
+import LoadingModalOverlay from '../components/LoadingModalOverlay';
+import LoadingRoller from '../components/LoadingRoller';
 const Cart = ({ navigation }) => {
-  const [cartLog, setCartLog] = useState(null);
   const [allDelete, setAllDelete] = useState(true);
   const [showtip, setShowtip] = useState(true);
+  const { appContextState, setAppContextState, apiEndpoint } =
+    useContext(AppContext);
+  const { cart: mainCart, userProfileData } = appContextState;
+  const [cartLog, setCartLog] = useState(mainCart);
+  const [totalPrice, setTotalPrice] = useState([0]);
+  const [deliveryFee, setDeliveryFee] = useState([0]);
+  const [loading, setLoading] = useState(true);
+  useFocusEffect(
+    React.useCallback(() => {
+      let isActive = true;
+
+      const fetchUser = async () => {
+        try {
+          const id =
+            userProfileData.phoneNumber || AsyncStorage.getItem('phoneNumer');
+          const res = await fetch(`${apiEndpoint}/api/userData/${id}`);
+          const data = await res.json();
+          if (isActive) {
+            await setAppContextState({ ...appContextState, ...data });
+            setCartLog(data.cart);
+            setLoading(false);
+          }
+        } catch (err) {
+          console.log(err);
+        }
+      };
+
+      fetchUser();
+
+      return () => {
+        isActive = false;
+      };
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []),
+  );
+  // useEffect(() => {
+  //   setAppContextState({ ...appContextState, cart: cartLog });
+  // }, [cartLog]);
   useEffect(() => {
-    cartItems.length > 0 && setCartLog(cartItems);
+    if (cartLog.length > 0) {
+      const tempTotalPrice = [];
+      cartLog.map(i => {
+        tempTotalPrice.push(i.price * i.numberOfItem);
+      });
+      setTotalPrice(tempTotalPrice.reduce((a, b) => a + b));
+    }
+  }, [cartLog, totalPrice]);
+  useEffect(() => {
+    if (cartLog.length > 0) {
+      const tempDeliveryPrice = [];
+      cartLog.map(i => {
+        tempDeliveryPrice.push(
+          typeof i.deliveryFee === 'string' ? 0 : i.deliveryFee,
+        );
+      });
+      setDeliveryFee(tempDeliveryPrice.reduce((a, b) => a + b));
+    }
+  }, [cartLog]);
+  useEffect(() => {
     setTimeout(() => {
       setAllDelete(true);
-      // console.log(typeof cartItems);
     }, 2000);
-  }, [allDelete]);
-  return cartLog ? (
+  }, []);
+  return cartLog.length > 0 ? (
     <ImageBackground
       source={require('../../assets/images/splashBg.png')}
       style={globalStyles.route}
@@ -44,80 +105,74 @@ const Cart = ({ navigation }) => {
           </Pressable>
           <Text style={styles.headerTitle}>Cart</Text>
         </View>
-        <ScrollView
-          alwaysBounceVertical={true}
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={{
-            flexGrow: 1,
-            justifyContent: 'space-between',
-          }}
-          style={styles.body}>
-          <View>
-            {cartLog.slice(0, cartLog.length - 1).map(cart => (
-              <CartItem
-                cart={cart}
-                key={cart.id}
-                navigation={navigation}
-                allDelete={allDelete}
-                setAllDelete={setAllDelete}
-                cartLog={cartLog}
-                setCartLog={setCartLog}
-              />
-            ))}
-          </View>
-          <View style={styles.checkout}>
-            <View style={[styles.checkoutTab, styles.foodCosts]}>
-              <Text style={globalStyles.fontRegular}>Food costs</Text>
-              <Text style={styles.foodCostsPrice}>
-                <Text style={styles.lineThrough}>N</Text>
-                {cartLog
-                  .slice(cartLog.length - 1, cartLog.length)
-                  .map(cart => cart.totalAmount)
-                  .toLocaleString()}
-              </Text>
+        {loading ? (
+          <LoadingRoller />
+        ) : (
+          <ScrollView
+            alwaysBounceVertical={true}
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={{
+              flexGrow: 1,
+              justifyContent: 'space-between',
+            }}
+            style={styles.body}>
+            <View>
+              {cartLog.map(cart => (
+                <CartItem
+                  key={cart._id}
+                  cart={cart}
+                  navigation={navigation}
+                  allDelete={allDelete}
+                  setAllDelete={setAllDelete}
+                  cartLog={cartLog}
+                  setCartLog={setCartLog}
+                  userProfileData={userProfileData}
+                  apiEndpoint={apiEndpoint}
+                />
+              ))}
             </View>
-            <View style={[styles.checkoutTab, styles.delivery]}>
-              <Text style={globalStyles.fontRegular}>Delivery</Text>
-              <Text style={globalStyles.fontBold}>
-                {cartLog.slice(cartLog.length - 1, cartLog.length).map(cart =>
-                  cart.deliveryFee === 'free' ? (
+            <View style={styles.checkout}>
+              <View style={[styles.checkoutTab, styles.foodCosts]}>
+                <Text style={globalStyles.fontRegular}>Food costs</Text>
+                <Text style={styles.foodCostsPrice}>
+                  <Text style={styles.lineThrough}>N</Text>
+                  {totalPrice.toLocaleString()}
+                </Text>
+              </View>
+              <View style={[styles.checkoutTab, styles.delivery]}>
+                <Text style={globalStyles.fontRegular}>Delivery</Text>
+                <Text style={globalStyles.fontBold}>
+                  {deliveryFee < 1 ? (
                     'Free'
                   ) : (
-                    <Text key={cart.deliveryFee}>
+                    <>
                       <Text style={styles.lineThrough}>N</Text>
-                      {cart.deliveryFee.toLocaleString()}
-                    </Text>
-                  ),
-                )}
-              </Text>
+                      {deliveryFee.toLocaleString()}
+                    </>
+                  )}
+                </Text>
+              </View>
+              <View style={styles.total}>
+                <Text style={styles.totalText}>Sub Total</Text>
+                <Text style={styles.totalTextPrice}>
+                  <Text style={styles.lineThrough}>N</Text>
+                  {(totalPrice + deliveryFee).toLocaleString()}
+                </Text>
+              </View>
+              <View style={styles.button}>
+                <Pressable
+                  style={styles.buttonBackground}
+                  onPress={() =>
+                    showtip
+                      ? navigation.navigate('Tip')
+                      : navigation.navigate('Checkout')
+                  }>
+                  <Text style={styles.buttonBackgroundText}>Checkout</Text>
+                </Pressable>
+              </View>
             </View>
-            <View style={styles.total}>
-              <Text style={styles.totalText}>Sub Total</Text>
-              <Text style={styles.totalTextPrice}>
-                <Text style={styles.lineThrough}>N</Text>
-                {cartLog
-                  .slice(cartLog.length - 1, cartLog.length)
-                  .map(
-                    cart =>
-                      cart.totalAmount +
-                      (cart.deliveryFee === 'free' ? 0 : cart.deliveryFee),
-                  )
-                  .toLocaleString()}
-              </Text>
-            </View>
-            <View style={styles.button}>
-              <Pressable
-                style={styles.buttonBackground}
-                onPress={() =>
-                  showtip
-                    ? navigation.navigate('Tip')
-                    : navigation.navigate('Checkout')
-                }>
-                <Text style={styles.buttonBackgroundText}>Checkout</Text>
-              </Pressable>
-            </View>
-          </View>
-        </ScrollView>
+          </ScrollView>
+        )}
       </Pressable>
     </ImageBackground>
   ) : (
@@ -186,7 +241,7 @@ const styles = StyleSheet.create({
   },
   textContainer: {
     flex: 3,
-    justifyContent: 'space-between',
+    justifyContent: 'center',
   },
   cardTitle: {
     fontFamily: 'Poppins-SemiBold',
@@ -288,258 +343,245 @@ const CartItem = ({
   setAllDelete,
   cartLog,
   setCartLog,
+  userProfileData,
+  apiEndpoint,
 }) => {
   const [numberOfItem, setNumberOfItem] = useState(1);
   const [deleteCard, setDeleteCard] = useState(false);
+  const [modalOpen, setModalOpen] = useState(false);
   useEffect(() => {
     setNumberOfItem(cart.numberOfItem);
     allDelete === false && setDeleteCard(false);
   }, [allDelete, cart.numberOfItem]);
-  const handleIncrement = () => {
-    numberOfItem < 20
-      ? setNumberOfItem(prev => prev + 1)
-      : Alert.alert('Maximum Order is 20 at a time!');
+  const fetchUserData = async () => {
+    const id = userProfileData.phoneNumber;
+    const res = await fetch(`${apiEndpoint}/api/userData/${id}`);
+    return await res.json();
   };
+
+  const handleUpdateCart = async param => {
+    const id = userProfileData.phoneNumber;
+    const res = await fetch(`${apiEndpoint}/api/cart/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        _id: cart._id,
+        numberOfItem: numberOfItem + param,
+      }),
+    });
+    return await res.json();
+  };
+
+  const handleDeleteCart = async () => {
+    const id = userProfileData.phoneNumber;
+    const res = await fetch(`${apiEndpoint}/api/cart/${id}/${cart._id}`, {
+      method: 'DELETE',
+    });
+    return (
+      res.status === 204 && setCartLog(cartLog.filter(i => i._id !== cart._id))
+    );
+  };
+
+  const handleIncrement = async () => {
+    if (numberOfItem < 20) {
+      handleShowModal();
+      setNumberOfItem(prev => prev + 1);
+      handleUpdateCart(1).catch(err => console.log(err));
+      fetchUserData()
+        .then(result => {
+          setCartLog(result.cart);
+          handleShowModal();
+        })
+        .catch(err => console.log(err));
+    } else {
+      Alert.alert('Maximum Order is 20 at a time!');
+    }
+  };
+
   const handleDecrement = () => {
-    numberOfItem > 0 && setNumberOfItem(prev => prev - 1);
-  };
-  const fadeAnim = useRef(new Animated.Value(0)).current;
-  const fadeIn = () => {
-    // Will change fadeAnim value to 1 in 5 seconds
-    Animated.timing(fadeAnim, {
-      toValue: 1,
-      duration: 5000,
-    }).start();
-  };
-
-  const fadeOut = () => {
-    // Will change fadeAnim value to 0 in 3 seconds
-    Animated.timing(fadeAnim, {
-      toValue: 0,
-      duration: 3000,
-    }).start();
+    if (numberOfItem > 1) {
+      handleShowModal();
+      setNumberOfItem(prev => prev - 1);
+      handleUpdateCart(-1).catch(err => console.log(err));
+      fetchUserData()
+        .then(result => {
+          setCartLog(result.cart);
+          handleShowModal();
+        })
+        .catch(err => console.log(err));
+    } else {
+      handleDeleteCart();
+    }
   };
 
+  const imagePath = () => {
+    const i = cart.title.toLowerCase();
+    if (i === 'a plate with chicken') {
+      return [require('../../assets/images/aPlateWithChicken2.png')];
+    } else if (i === 'a plate with beef') {
+      return [
+        require('../../assets/images/aPlateWithBeef1.png'),
+        require('../../assets/images/aPlateWithBeef2.png'),
+      ];
+    } else if (i === 'a plate with croaker fish') {
+      return [require('../../assets/images/aPlateWithCroakerFish1.png')];
+    } else if (i === 'a plate with fish') {
+      return [require('../../assets/images/aPlateWithFish1.png')];
+    } else if (i === 'beef shawarma') {
+      return [require('../../assets/images/BeefShawarma.png')];
+    } else if (i === 'chicken shawarma') {
+      return [require('../../assets/images/ChickenShawarma1.png')];
+    } else if (i === 'coleslaw') {
+      return [require('../../assets/images/coleslaw1.png')];
+    } else {
+      return [
+        require('../../assets/images/aPlateWithChicken2.png'),
+        require('../../assets/images/aPlateWithChicken1.png'),
+      ];
+    }
+  };
+  const titlePlural = cart.title
+    .replace('A', numberOfItem)
+    .replace('plate', 'plates')
+    .replace('Plate', 'plates');
+  const handleShowModal = () => {
+    setModalOpen(prev => !prev);
+  };
+  const handleNavigate = () => {
+    const result = imagePath();
+    cart = { ...cart, image: result };
+    navigation.navigate('FoodMenuParams', cart);
+  };
   return (
-    <Animated.View key={cart.id} style={styles.cardContainer}>
-      <Pressable
-        onPress={() => deleteCard === false && setAllDelete(false)}
-        onLongPress={() => {
-          setAllDelete(false);
-          setAllDelete(true);
-          setDeleteCard(prev => !prev);
-          Vibration.vibrate(50);
-        }}
-        style={
-          deleteCard && allDelete
-            ? { transform: [{ translateX: -80 }], flex: 1 }
-            : { transform: [{ translateX: 0 }], flex: 1 }
-        }>
-        <View style={[styles.card, styles.elevation]}>
-          <View style={styles.imageContainer}>
-            <Image
-              source={cart.image[1]}
-              style={styles.image}
-              resizeMode="contain"
-            />
-          </View>
-          <View style={styles.textContainer}>
-            <Text style={styles.cardTitle}>
-              {cart.numberOfItem > 1
-                ? `${cart.numberOfItem} ${cart.titlePlural}`
-                : cart.title}
-            </Text>
-            <Text style={styles.cardDetails}>
-              {cart.additionals || cart.desserts || cart.drinks
-                ? 'Mixed with '
-                : ''}
-              {cart.additionals && (
-                <>
-                  {cart.additionals
-                    .slice(0, cart.additionals.length - 1)
-                    .map(addition => (
-                      <Text key={addition}>
-                        {addition}
-                        {cart.additionals.indexOf(addition) !==
-                        cart.additionals.length - 2
-                          ? ', '
-                          : ' and '}
-                      </Text>
-                    ))}
-                  {cart.additionals
-                    .slice(cart.additionals.length - 1, cart.additionals.length)
-                    .map(addition => (
-                      <Text key={addition}>{addition}</Text>
-                    ))}
-                </>
-              )}
-              {cart.additionals && cart.desserts ? ' with ' : ''}
-              {cart.desserts
-                ?.slice(0, cart.desserts.length - 1)
-                .map(dessert => (
-                  <Text key={dessert}>
-                    {dessert}
-                    {cart.desserts.indexOf(dessert) !== cart.desserts.length - 2
+    <>
+      <View key={cart.id} style={styles.cardContainer}>
+        <Pressable
+          onPress={() => deleteCard === false && setAllDelete(false)}
+          onLongPress={() => {
+            setAllDelete(false);
+            setAllDelete(true);
+            setDeleteCard(prev => !prev);
+            Vibration.vibrate(50);
+          }}
+          style={
+            deleteCard && allDelete
+              ? { transform: [{ translateX: -80 }], flex: 1 }
+              : { transform: [{ translateX: 0 }], flex: 1 }
+          }>
+          <View style={[styles.card, styles.elevation]}>
+            <View style={styles.imageContainer}>
+              <Image
+                source={imagePath()[0]}
+                style={styles.image}
+                resizeMode="contain"
+              />
+            </View>
+            <View style={styles.textContainer}>
+              <Text style={styles.cardTitle}>
+                {cart.numberOfItem > 1
+                  ? // ? `${numberOfItem} ${cart.titlePlural}`
+                    titlePlural
+                  : cart.title}
+              </Text>
+              <Text style={styles.cardDetails}>
+                {cart.additionals.length > 0 ||
+                cart.desserts.length > 1 ||
+                cart.drinks.length > 0
+                  ? 'Mixed with '
+                  : ''}
+                {cart.additionals && (
+                  <>
+                    {cart.additionals
+                      .slice(0, cart.additionals.length - 1)
+                      .map((addition, i) => (
+                        <Text key={i}>
+                          {addition}
+                          {cart.additionals.indexOf(addition) % 2 !== 0
+                            ? ','
+                            : ''}{' '}
+                        </Text>
+                      ))}
+                    {cart.additionals
+                      .slice(
+                        cart.additionals.length - 1,
+                        cart.additionals.length,
+                      )
+                      .map(addition => (
+                        <Text key={addition}>{addition}</Text>
+                      ))}
+                  </>
+                )}
+                {cart.additionals.length > 0 && cart.desserts.length > 0
+                  ? ' with '
+                  : ''}
+                {cart.desserts
+                  ?.slice(0, cart.desserts.length - 1)
+                  .map(dessert => (
+                    <Text key={dessert}>
+                      {dessert}
+                      {cart.desserts.indexOf(dessert) !==
+                      cart.desserts.length - 2
+                        ? ', '
+                        : ' and '}
+                    </Text>
+                  ))}
+                {cart.desserts
+                  ?.slice(cart.desserts.length - 1, cart.desserts.length)
+                  .map(dessert => (
+                    <Text key={dessert}>{dessert}</Text>
+                  ))}
+                {(cart.additionals.length > 0 || cart.desserts.length > 0) &&
+                cart.drinks.length > 0
+                  ? ' with '
+                  : ''}
+                {cart.drinks?.slice(0, cart.drinks.length - 1).map(drink => (
+                  <Text key={drink}>
+                    {drink}
+                    {cart.drinks.indexOf(drink) !== cart.drinks.length - 2
                       ? ', '
                       : ' and '}
                   </Text>
                 ))}
-              {cart.desserts
-                ?.slice(cart.desserts.length - 1, cart.desserts.length)
-                .map(dessert => (
-                  <Text key={dessert}>{dessert}</Text>
-                ))}
-              {(cart.additionals || cart.desserts) && cart.drinks
-                ? ' with '
-                : ''}
-              {cart.drinks?.slice(0, cart.drinks.length - 1).map(drink => (
-                <Text key={drink}>
-                  {drink}
-                  {cart.drinks.indexOf(drink) !== cart.drinks.length - 2
-                    ? ', '
-                    : ' and '}
-                </Text>
-              ))}
-              {cart.drinks
-                ?.slice(cart.drinks.length - 1, cart.drinks.length)
-                .map(drink => (
-                  <Text key={drink}>{drink}</Text>
-                ))}
-              .
-            </Text>
-            <Text style={styles.cardPrice}>
-              <Text style={styles.lineThroughColored}>N</Text> {cart.price}
-            </Text>
-          </View>
-          <View style={styles.counterContainer}>
-            <Pressable
-              style={styles.chevron}
-              onPress={() => navigation.navigate('FoodMenuParams', cart)}>
-              <Chevron width={20} height={20} />
-            </Pressable>
-            <View style={styles.counter}>
-              <TouchableOpacity onPress={handleDecrement}>
-                <Minus width={30} height={30} />
-              </TouchableOpacity>
-              <Text style={styles.counterText}>{numberOfItem}</Text>
-              <TouchableOpacity onPress={handleIncrement}>
-                <Plus width={35} height={35} />
-              </TouchableOpacity>
+                {cart.drinks
+                  ?.slice(cart.drinks.length - 1, cart.drinks.length)
+                  .map(drink => (
+                    <Text key={drink}>{drink}</Text>
+                  ))}
+                {cart.additionals.length > 0 ||
+                  cart.desserts.length > 0 ||
+                  (cart.drinks.length > 0 && '.')}
+              </Text>
+              <Text style={styles.cardPrice}>
+                <Text style={styles.lineThroughColored}>N</Text>{' '}
+                {(cart.price * numberOfItem).toLocaleString()}
+              </Text>
+            </View>
+            <View style={styles.counterContainer}>
+              <Pressable style={styles.chevron} onPress={handleNavigate}>
+                <Chevron width={20} height={20} />
+              </Pressable>
+              <View style={styles.counter}>
+                <TouchableOpacity onPress={handleDecrement}>
+                  <Minus width={30} height={30} />
+                </TouchableOpacity>
+                <Text style={styles.counterText}>{numberOfItem}</Text>
+                <TouchableOpacity onPress={handleIncrement}>
+                  <Plus width={35} height={35} />
+                </TouchableOpacity>
+              </View>
             </View>
           </View>
-        </View>
-      </Pressable>
-      {deleteCard && allDelete && (
-        <Pressable
-          onPress={() => setCartLog(cartLog.filter(i => i.id !== cart.id))}
-          style={styles.delete}>
-          <Delete />
         </Pressable>
-      )}
-    </Animated.View>
+        {deleteCard && allDelete && (
+          <Pressable onPress={handleDeleteCart} style={styles.delete}>
+            <Delete />
+          </Pressable>
+        )}
+      </View>
+      <LoadingModalOverlay
+        modalOpen={modalOpen}
+        handleShowModal={handleShowModal}
+      />
+    </>
   );
 };
-const cartItems = [
-  {
-    title: 'A Plate with Chicken',
-    titlePlural: 'Plates with Chicken',
-    additionals: ['extra rice', 'extra beef'],
-    desserts: ['coleslaw', 'beef', 'shawarma'],
-    drinks: ['fanta', 'Coke'],
-    price: 5000,
-    numberOfItem: 5,
-    image: [
-      require('../../assets/images/aPlateWithChicken1.png'),
-      require('../../assets/images/aPlateWithChicken2.png'),
-    ],
-    id: 1,
-  },
-  {
-    title: 'A Plate with Chicken',
-    titlePlural: 'Plates with Chicken',
-    additionals: ['extra rice', 'extra beef'],
-    desserts: ['coleslaw', 'beef', 'shawarma'],
-    drinks: ['fanta', 'Coke'],
-    price: 5000,
-    numberOfItem: 1,
-    image: [
-      require('../../assets/images/aPlateWithChicken1.png'),
-      require('../../assets/images/aPlateWithChicken2.png'),
-    ],
-    id: 2,
-  },
-  {
-    title: 'A Plate with Chicken',
-    titlePlural: 'Plates with Chicken',
-    additionals: ['extra rice', 'extra beef'],
-    desserts: ['coleslaw', 'beef', 'shawarma'],
-    drinks: ['fanta', 'Coke'],
-    price: 5000,
-    numberOfItem: 1,
-    image: [
-      require('../../assets/images/aPlateWithChicken1.png'),
-      require('../../assets/images/aPlateWithChicken2.png'),
-    ],
-    id: 3,
-  },
-  {
-    title: 'A Plate with Chicken',
-    titlePlural: 'Plates with Chicken',
-    additionals: ['extra rice', 'extra beef'],
-    desserts: ['coleslaw', 'beef', 'shawarma'],
-    drinks: ['fanta', 'Coke'],
-    price: 5000,
-    numberOfItem: 1,
-    image: [
-      require('../../assets/images/aPlateWithChicken1.png'),
-      require('../../assets/images/aPlateWithChicken2.png'),
-    ],
-    id: 4,
-  },
-  {
-    title: 'A Plate with Chicken',
-    titlePlural: 'Plates with Chicken',
-    additionals: ['extra rice', 'extra beef'],
-    desserts: ['coleslaw', 'beef', 'shawarma'],
-    drinks: ['fanta', 'Coke'],
-    price: 5000,
-    numberOfItem: 1,
-    image: [
-      require('../../assets/images/aPlateWithChicken1.png'),
-      require('../../assets/images/aPlateWithChicken2.png'),
-    ],
-    id: 5,
-  },
-  {
-    title: 'A Plate with Chicken',
-    titlePlural: 'Plates with Chicken',
-    additionals: ['extra rice', 'extra beef'],
-    desserts: ['coleslaw', 'beef', 'shawarma'],
-    drinks: ['fanta', 'Coke'],
-    price: 5000,
-    numberOfItem: 1,
-    image: [
-      require('../../assets/images/aPlateWithChicken1.png'),
-      require('../../assets/images/aPlateWithChicken2.png'),
-    ],
-    id: 6,
-  },
-  {
-    title: 'A Plate with Chicken',
-    titlePlural: 'Plates with Chicken',
-    additionals: ['extra rice', 'extra beef'],
-    desserts: ['coleslaw', 'beef', 'shawarma'],
-    drinks: ['fanta', 'Coke'],
-    price: 5000,
-    numberOfItem: 1,
-    image: [
-      require('../../assets/images/aPlateWithChicken1.png'),
-      require('../../assets/images/aPlateWithChicken2.png'),
-    ],
-    id: 7,
-  },
-  {
-    totalAmount: 10000,
-    deliveryFee: 500,
-  },
-];
