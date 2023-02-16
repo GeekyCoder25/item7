@@ -52,9 +52,11 @@ const Checkout = ({ navigation }) => {
     cart.map(i => {
       if (localOrders.length > 0 && localOrders.includes(i.title)) {
         const index = localOrders.indexOf(i.title);
-        localOrders[index - 1] = localOrders[index - 1] + 1;
+        localOrders[index - 1] = localOrders[index - 1] + 1 * i.numberOfItem;
       } else {
-        localOrders.push(1);
+        i.numberOfItem <= 1
+          ? localOrders.push(1)
+          : localOrders.push(1 * i.numberOfItem);
         localOrders.push(i.title);
       }
     });
@@ -76,7 +78,7 @@ const Checkout = ({ navigation }) => {
           recents: [...recents, ...localRecents],
         }),
       )
-      .then(console.log(appContextState), navigation.navigate('Congrats'))
+      .then(navigation.navigate('Congrats'))
       .catch(err => ToastAndroid.show(err.message, ToastAndroid.SHORT));
   };
   return (

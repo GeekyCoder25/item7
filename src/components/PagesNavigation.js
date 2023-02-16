@@ -20,6 +20,7 @@ import Checkout from '../pages/Checkout';
 import Tip from '../pages/Tip';
 import Congrats from '../pages/Congrats';
 import { AppContext } from '../components/AppContext';
+import Userinfo from '../pages/Userinfo';
 
 const PagesNavigation = () => {
   const Stack = createNativeStackNavigator();
@@ -39,6 +40,7 @@ const PagesNavigation = () => {
       <Stack.Screen name="MoreOptions" component={MoreOptions} />
       <Stack.Screen name="Refer" component={Refer} />
       <Stack.Screen name="Profile" component={Profile} />
+      <Stack.Screen name="Userinfo" component={Userinfo} />
       <Stack.Screen name="Wallet" component={Wallet} />
       <Stack.Screen name="Payment" component={Payment} />
       <Stack.Screen name="Tip" component={Tip} />

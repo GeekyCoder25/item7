@@ -102,7 +102,6 @@ const DesertsParams = ({ route, navigation }) => {
       const updatedFavorites = favorites.filter(i => i !== route.params.title);
       handleFavoriteFetch([...updatedFavorites])
         .then(i => {
-          console.log(i);
           setHeartActive(!heartActive);
           setAppContextState({
             ...appContextState,

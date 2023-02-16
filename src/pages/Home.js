@@ -1,4 +1,4 @@
-import { useFocusEffect, useNavigation } from '@react-navigation/native';
+import { useNavigation } from '@react-navigation/native';
 import React, { useContext, useEffect, useRef, useState } from 'react';
 import {
   ScrollView,
@@ -20,8 +20,8 @@ import ButtomTab from '../components/ButtomTab';
 import { AppContext } from '../components/AppContext';
 const Home = ({ navigation, route }) => {
   const { appContextState } = useContext(AppContext);
-  const { userProfileData, userLoggedIn, notifications } = appContextState;
-  const firstname = userProfileData.firstName;
+  const { userInfo, userLoggedIn, notifications } = appContextState;
+  const firstname = userInfo.firstName;
   const [searchIcon, setSearchIcon] = useState(true);
   const [notificationActive, setNotificationActive] = useState(false);
   const searchInputRef = useRef(TextInput);
@@ -32,7 +32,7 @@ const Home = ({ navigation, route }) => {
     AsyncStorage.clear();
   };
   useEffect(() => {
-    setNotificationActive(true);
+    no > 0 && setNotificationActive(true);
   }, [no]);
   return (
     <>

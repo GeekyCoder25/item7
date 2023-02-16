@@ -12,7 +12,7 @@ import {
   useWindowDimensions,
   View,
 } from 'react-native';
-import React, { useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import Back from '../../assets/images/back.svg';
 import Minus from '../../assets/images/minus.svg';
 import ChevronDown from '../../assets/images/chevron-down.svg';
@@ -23,12 +23,51 @@ import ExtrasListIconActive from '../../assets/images/extrasListIconActive.svg';
 import ExtraPlus from '../../assets/images/extrasAdd.svg';
 import LinearGradient from 'react-native-linear-gradient';
 import { DrinksData } from '../data/db';
+import { AppContext } from '../components/AppContext';
 
 const Drinks = ({ route, navigation }) => {
+  const [modalOpen, setModalOpen] = useState(false);
+  const [price, setPrice] = useState([]);
+  const [drinks, setDrinks] = useState([]);
+  const [numberOfItem, setNumberOfItem] = useState(1);
   const [extrasExpanded, setExtasExpanded] = useState(true);
-
+  const { appContextState, setAppContextState, apiEndpoint } =
+    useContext(AppContext);
+  const { userProfileData, cart } = appContextState;
+  const [addedPrice, setAddedPrice] = useState([]);
   const vh = useWindowDimensions().height;
-
+  const cartData = [
+    ...cart,
+    {
+      title: route.params.title,
+      price: addedPrice,
+      deliveryFee: route.params.deliveryFee || 0,
+      numberOfItem: numberOfItem,
+      drinks: drinks,
+    },
+  ];
+  const handleAddToCart = async () => {
+    handleShowModal();
+    const id = userProfileData.phoneNumber;
+    const res = await fetch(`${apiEndpoint}/api/cart/${id}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(cartData),
+    });
+    await res.json();
+  };
+  const handleShowModal = () => {
+    setModalOpen(prev => !prev);
+  };
+  useEffect(() => {
+    if (price.length < 1) {
+      setAddedPrice(0);
+    } else if (price.length < 2) {
+      setAddedPrice(price[0]);
+    } else {
+      setAddedPrice(price.reduce((a, b) => a + b));
+    }
+  }, [price]);
   return (
     <ImageBackground
       source={require('../../assets/images/splashBg.png')}
@@ -70,7 +109,14 @@ const Drinks = ({ route, navigation }) => {
                 {extrasExpanded && (
                   <View>
                     {DrinksData.map(data => (
-                      <Choose data={data} key={data.title} />
+                      <Choose
+                        data={data}
+                        key={data.title}
+                        drinks={drinks}
+                        setDrinks={setDrinks}
+                        price={price}
+                        setPrice={setPrice}
+                      />
                     ))}
                   </View>
                 )}
@@ -93,10 +139,27 @@ const Drinks = ({ route, navigation }) => {
                 <Pressable
                   style={styles.cartButton}
                   onPress={() =>
-                    ToastAndroid.show(
-                      `${route.params.title} has been added to your cart sucessfully 🤗`,
-                      ToastAndroid.SHORT,
-                    )
+                    handleAddToCart()
+                      .then(() => {
+                        setAppContextState({
+                          ...appContextState,
+                          cart: cartData,
+                        });
+                        setNumberOfItem(1);
+                        handleShowModal();
+                        ToastAndroid.show(
+                          `${route.params.title} has been added to your cart sucessfully 🤗`,
+                          ToastAndroid.SHORT,
+                        );
+                      })
+                      .catch(err => {
+                        console.log(err);
+                        handleShowModal();
+                        ToastAndroid.show(
+                          'No internet Connection',
+                          ToastAndroid.SHORT,
+                        );
+                      })
                   }>
                   <LinearGradient
                     style={styles.cartButtonLinear}
@@ -284,23 +347,46 @@ const styles = StyleSheet.create({
 });
 export default Drinks;
 
-export const Choose = ({ data }) => {
+export const Choose = ({ data, price, setPrice, drinks, setDrinks }) => {
   const [numberOfItem, setNumberOfItem] = useState(0);
   const [selected, setSelected] = useState(false);
 
   const handleSelected = () => {
     setSelected(!selected);
-    selected ? setNumberOfItem(0) : setNumberOfItem(1);
+    selected ? handleDecrement() : handleIncrement();
   };
   const handleIncrement = () => {
-    numberOfItem < 20
-      ? setNumberOfItem(prev => prev + 1)
-      : Alert.alert('Maximum Order is 20 at a time!');
+    if (numberOfItem < 20) {
+      setNumberOfItem(prev => prev + 1);
+      if (numberOfItem > 0 && drinks.includes(data.title)) {
+        const index = drinks.indexOf(data.title);
+        drinks[index - 1] = numberOfItem + 1;
+      } else {
+        drinks.push(1);
+        drinks.push(data.title);
+      }
+      setDrinks(oldArray => [...oldArray]);
+      price.push(data.price);
+      setPrice(oldArray => [...oldArray]);
+    } else {
+      Alert.alert('Maximum Order is 20 at a time!');
+    }
     numberOfItem > -1 ? setSelected(true) : setSelected(false);
   };
   const handleDecrement = () => {
-    numberOfItem > 0 && setNumberOfItem(prev => prev - 1);
-    console.log(numberOfItem);
+    if (numberOfItem > 0) {
+      setNumberOfItem(prev => prev - 1);
+    }
+    if (numberOfItem > 1 && drinks.includes(data.title)) {
+      const index = drinks.indexOf(data.title);
+      drinks[index - 1] = numberOfItem - 1;
+    } else {
+      const index = drinks.indexOf(data.title);
+      drinks.splice(index - 1, 2);
+    }
+    setDrinks(oldArray => [...oldArray]);
+    price.pop(data.price);
+    setPrice(oldArray => [...oldArray]);
     numberOfItem > 1 ? setSelected(true) : setSelected(false);
   };
   return (

@@ -39,8 +39,6 @@ const FoodMenuParams = ({ route, navigation }) => {
     useContext(AppContext);
   const { userProfileData, cart, favorites } = appContextState;
   const [additionals, setAdditionals] = useState([]);
-  const [desserts, setDesserts] = useState([]);
-  const [drinks, setDrinks] = useState([]);
   const [price, setPrice] = useState([]);
   const [addedPrice, setAddedPrice] = useState([]);
 
@@ -111,7 +109,6 @@ const FoodMenuParams = ({ route, navigation }) => {
       setAddedPrice(0);
     } else if (price.length < 2) {
       setAddedPrice(price[0]);
-      // additionals
     } else {
       setAddedPrice(price.reduce((a, b) => a + b));
     }
@@ -120,11 +117,11 @@ const FoodMenuParams = ({ route, navigation }) => {
     ...cart,
     {
       additionals,
-      desserts,
-      drinks,
+      desserts: [],
+      drinks: [],
       title: route.params.title,
       price: route.params.price + addedPrice,
-      deliveryFee: route.params.deliveryFee || 0,
+      deliveryFee: route.params.deliveryFee,
       numberOfItem: numberOfItem,
     },
   ];
@@ -236,8 +233,6 @@ const FoodMenuParams = ({ route, navigation }) => {
                           data={data}
                           additionals={additionals}
                           setAdditionals={setAdditionals}
-                          desserts={desserts}
-                          drinks={drinks}
                           price={price}
                           setPrice={setPrice}
                         />

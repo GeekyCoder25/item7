@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   ImageBackground,
   Pressable,
@@ -25,18 +25,19 @@ import Logout from '../../assets/images/logout.svg';
 import { useContext } from 'react/cjs/react.development';
 import { AppContext } from '../components/AppContext';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import LoadingModalOverlay from '../components/LoadingModalOverlay';
 
 const Profile = ({ navigation }) => {
+  const [modalOpen, setModalOpen] = useState(false);
   const vw = useWindowDimensions().width;
   const { appContextState, setAppContextState } = useContext(AppContext);
   const { userLoggedIn, userProfileData } = appContextState;
   const firstname = userProfileData.firstName;
   console.log(appContextState);
   const handleLogout = () => {
-    navigation.navigate('Home');
+    handleShowModal();
     AsyncStorage.setItem('loggedIn', 'false');
     AsyncStorage.removeItem('phoneNumber');
-    AsyncStorage.removeItem('firstName');
     setAppContextState({
       userLoggedIn: false,
       userProfileData: {},
@@ -51,9 +52,13 @@ const Profile = ({ navigation }) => {
       recents: [],
       userInfo: [],
     });
+    handleShowModal();
+    navigation.navigate('Home');
+  };
+  const handleShowModal = () => {
+    setModalOpen(prev => !prev);
   };
   return (
-    // debugger;
     <View style={styles.route}>
       {/* <ScrollView> */}
       <View style={styles.header}>
@@ -119,6 +124,10 @@ const Profile = ({ navigation }) => {
           )}
         </ScrollView>
       </ImageBackground>
+      <LoadingModalOverlay
+        modalOpen={modalOpen}
+        handleShowModal={handleShowModal}
+      />
       {/* </ScrollView> */}
     </View>
   );
@@ -235,7 +244,7 @@ const Links = [
   {
     Image: ProfileSvg,
     text: 'My Information',
-    link: 'Profile',
+    link: 'Userinfo',
   },
   {
     Image: Wallet,

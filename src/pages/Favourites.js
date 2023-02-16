@@ -13,8 +13,8 @@ import Empty from '../components/Empty';
 import Heart from '../../assets/images/favouriteImage.svg';
 import { AppContext } from '../components/AppContext';
 import { globalStyles } from '../styles/globalStyles';
+import Back from '../../assets/images/back.svg';
 import Xmark from '../../assets/images/xmarkcolor.svg';
-import Plus from '../../assets/images/plus.svg';
 import { AllData } from '../data/db';
 import LoadingModalOverlay from '../components/LoadingModalOverlay';
 
@@ -48,10 +48,8 @@ const Favourites = ({ navigation }) => {
     favoriteLogData
       .filter(i => i.title !== favorite.title)
       .forEach(i => updatedFavorites.push(i.title));
-    console.log(updatedFavorites);
     handleFavoriteFetch(updatedFavorites)
       .then(i => {
-        console.log(i);
         setAppContextState({
           ...appContextState,
           favorites: updatedFavorites,
@@ -66,12 +64,9 @@ const Favourites = ({ navigation }) => {
       .catch(err => {
         handleShowModal();
         console.log(err.message);
-        // ToastAndroid.show(err.message, ToastAndroid.SHORT);
+        ToastAndroid.show(err.message, ToastAndroid.SHORT);
       });
   };
-  useEffect(() => {
-    console.log(appContextState);
-  }, [appContextState]);
   const handleShowModal = () => {
     setModalOpen(prev => !prev);
   };
@@ -86,7 +81,7 @@ const Favourites = ({ navigation }) => {
             <View style={styles.body}>
               <View style={styles.header}>
                 <Pressable onPress={() => navigation.goBack()}>
-                  <Xmark />
+                  <Back />
                 </Pressable>
                 <Text style={styles.headerTitle}>Favorites</Text>
               </View>
@@ -110,7 +105,7 @@ const Favourites = ({ navigation }) => {
                         <Pressable
                           onPress={() => handleRemoveFavorite(favorite)}
                           style={styles.minus}>
-                          <Plus />
+                          <Xmark width="45" />
                         </Pressable>
                       </View>
                     </Pressable>

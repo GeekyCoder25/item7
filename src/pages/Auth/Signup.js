@@ -35,6 +35,11 @@ const Signup = ({ navigation }) => {
     password: '',
     confirmPassword: '',
     phoneNumber: '',
+    // firstName: 'Nice',
+    // lastName: 'Nice',
+    // password: '251101',
+    // confirmPassword: '251101',
+    // phoneNumber: '9073002596',
   });
   const vh = useWindowDimensions().height;
   const editInput = () => {
@@ -52,13 +57,16 @@ const Signup = ({ navigation }) => {
     try {
       const userProfileData = data.data;
       await AsyncStorage.setItem('loggedIn', 'true');
-      await AsyncStorage.setItem('firstName', userProfileData.firstName);
       await AsyncStorage.setItem('phoneNumber', userProfileData.phoneNumber);
       const fetchUserData = async () => {
         const id = userProfileData.phoneNumber;
         const hiddenData = {
           phoneNumber: id,
-          userData: {},
+          userInfo: {
+            firstName: userProfileData.firstName,
+            lastName: userProfileData.lastName,
+            email: '',
+          },
         };
         const res = await fetch(`${apiEndpoint}/api/userData/${id}`, {
           method: 'POST',
@@ -111,8 +119,8 @@ const Signup = ({ navigation }) => {
             setErrorMessage(data);
             setLoading(false);
           } else {
-            setSuccessMessage('Account Created Successfully');
             saveAsyncStorage(data);
+            setSuccessMessage(data.success);
             // setLoading(false);
           }
         })

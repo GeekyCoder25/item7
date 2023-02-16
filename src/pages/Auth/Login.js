@@ -73,9 +73,9 @@ const Login = ({ navigation }) => {
   };
   const saveAsyncStorage = async data => {
     try {
+      console.log(data);
       const userProfileData = data.data;
       await AsyncStorage.setItem('loggedIn', 'true');
-      await AsyncStorage.setItem('firstName', userProfileData.firstName);
       await AsyncStorage.setItem('phoneNumber', userProfileData.phoneNumber);
       const fetchUserData = async () => {
         const id = userProfileData.phoneNumber;
@@ -88,7 +88,6 @@ const Login = ({ navigation }) => {
           userProfileData,
           ...result,
         });
-        console.log(result);
         navigation.replace('Home');
       });
     } catch (err) {

@@ -52,8 +52,8 @@ export const foodMenus = [
     id: 4,
   },
   {
-    icon: require('../../assets/images/desserts.png'),
     title: 'Desserts',
+    icon: require('../../assets/images/desserts.png'),
     id: 5,
   },
   {
@@ -63,8 +63,8 @@ export const foodMenus = [
     id: 6,
   },
   {
-    icon: require('../../assets/images/favourite.png'),
     title: 'Favourites',
+    icon: require('../../assets/images/favourite.png'),
     id: 7,
   },
 ];
@@ -99,15 +99,15 @@ export const dessertsData = [
 export const DrinksData = [
   {
     title: 'Coke',
-    price: '100',
+    price: 100,
   },
   {
     title: 'Fanta',
-    price: '100',
+    price: 100,
   },
   {
     title: 'Sprite',
-    price: '100',
+    price: 100,
   },
 ];
 

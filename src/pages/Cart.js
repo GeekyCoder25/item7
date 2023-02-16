@@ -11,8 +11,6 @@ import {
   TouchableOpacity,
   View,
   Vibration,
-  Modal,
-  ActivityIndicator,
 } from 'react-native';
 import Empty from '../components/Empty';
 import CartImage from '../../assets/images/cartImage.svg';
@@ -433,6 +431,8 @@ const CartItem = ({
       return [require('../../assets/images/ChickenShawarma1.png')];
     } else if (i === 'coleslaw') {
       return [require('../../assets/images/coleslaw1.png')];
+    } else if (i === 'drinks') {
+      return [require('../../assets/images/drinks.png')];
     } else {
       return [
         require('../../assets/images/aPlateWithChicken2.png'),
@@ -450,7 +450,15 @@ const CartItem = ({
   const handleNavigate = () => {
     const result = imagePath();
     cart = { ...cart, image: result };
-    navigation.navigate('FoodMenuParams', cart);
+    if (cart.title === 'Desserts') {
+      navigation.navigate('Desserts');
+    } else if (cart.title === 'Drinks') {
+      navigation.navigate('Drinks', cart);
+    } else if (cart.title === 'Favourites') {
+      navigation.navigate('Favourites');
+    } else {
+      navigation.navigate('FoodMenuParams', cart);
+    }
   };
   return (
     <>
@@ -486,7 +494,7 @@ const CartItem = ({
               <Text style={styles.cardDetails}>
                 {cart.additionals.length > 0 ||
                 cart.desserts.length > 1 ||
-                cart.drinks.length > 0
+                cart.drinks.length > 99
                   ? 'Mixed with '
                   : ''}
                 {cart.additionals && (
@@ -511,13 +519,18 @@ const CartItem = ({
                       ))}
                   </>
                 )}
-                {cart.additionals.length > 0 && cart.desserts.length > 0
-                  ? ' with '
+                {cart.additionals.length > 0 &&
+                (cart.desserts.length === 0 || cart.drinks.length === 0)
+                  ? '.'
+                  : ''}
+                {cart.additionals.length > 0 &&
+                (cart.desserts.length > 0 || cart.drinks.length > 0)
+                  ? 'with'
                   : ''}
                 {cart.desserts
                   ?.slice(0, cart.desserts.length - 1)
-                  .map(dessert => (
-                    <Text key={dessert}>
+                  .map((dessert, i) => (
+                    <Text key={i}>
                       {dessert}
                       {cart.desserts.indexOf(dessert) !==
                       cart.desserts.length - 2
@@ -534,14 +547,17 @@ const CartItem = ({
                 cart.drinks.length > 0
                   ? ' with '
                   : ''}
-                {cart.drinks?.slice(0, cart.drinks.length - 1).map(drink => (
-                  <Text key={drink}>
-                    {drink}
-                    {cart.drinks.indexOf(drink) !== cart.drinks.length - 2
-                      ? ', '
-                      : ' and '}
-                  </Text>
-                ))}
+                {cart.drinks
+                  ?.slice(0, cart.drinks.length - 1)
+                  .map((drink, i) => (
+                    <Text key={i}>
+                      {drink}
+                      {drink.length > 2 && ','}
+                      {cart.drinks.indexOf(drink) !== cart.drinks.length - 2
+                        ? ' '
+                        : ' '}
+                    </Text>
+                  ))}
                 {cart.drinks
                   ?.slice(cart.drinks.length - 1, cart.drinks.length)
                   .map(drink => (
