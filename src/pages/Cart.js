@@ -27,10 +27,9 @@ import LoadingModalOverlay from '../components/LoadingModalOverlay';
 import LoadingRoller from '../components/LoadingRoller';
 const Cart = ({ navigation }) => {
   const [allDelete, setAllDelete] = useState(true);
-  const [showtip, setShowtip] = useState(true);
-  const { appContextState, setAppContextState, apiEndpoint } =
+  const { appContextState, setAppContextState, apiEndpoint, showTip } =
     useContext(AppContext);
-  const { cart: mainCart, userProfileData } = appContextState;
+  const { cart: mainCart, phoneNumber } = appContextState;
   const [cartLog, setCartLog] = useState(mainCart);
   const [totalPrice, setTotalPrice] = useState([0]);
   const [deliveryFee, setDeliveryFee] = useState([0]);
@@ -41,8 +40,7 @@ const Cart = ({ navigation }) => {
 
       const fetchUser = async () => {
         try {
-          const id =
-            userProfileData.phoneNumber || AsyncStorage.getItem('phoneNumer');
+          const id = phoneNumber || AsyncStorage.getItem('phoneNumer');
           const res = await fetch(`${apiEndpoint}/api/userData/${id}`);
           const data = await res.json();
           if (isActive) {
@@ -63,9 +61,6 @@ const Cart = ({ navigation }) => {
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []),
   );
-  // useEffect(() => {
-  //   setAppContextState({ ...appContextState, cart: cartLog });
-  // }, [cartLog]);
   useEffect(() => {
     if (cartLog.length > 0) {
       const tempTotalPrice = [];
@@ -90,7 +85,11 @@ const Cart = ({ navigation }) => {
     setTimeout(() => {
       setAllDelete(true);
     }, 2000);
-  }, []);
+    return () => {
+      setAppContextState({ ...appContextState, cart: cartLog });
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cartLog]);
   return cartLog.length > 0 ? (
     <ImageBackground
       source={require('../../assets/images/splashBg.png')}
@@ -124,7 +123,7 @@ const Cart = ({ navigation }) => {
                   setAllDelete={setAllDelete}
                   cartLog={cartLog}
                   setCartLog={setCartLog}
-                  userProfileData={userProfileData}
+                  phoneNumber={phoneNumber}
                   apiEndpoint={apiEndpoint}
                 />
               ))}
@@ -161,7 +160,7 @@ const Cart = ({ navigation }) => {
                 <Pressable
                   style={styles.buttonBackground}
                   onPress={() =>
-                    showtip
+                    showTip
                       ? navigation.navigate('Tip')
                       : navigation.navigate('Checkout')
                   }>
@@ -341,7 +340,7 @@ const CartItem = ({
   setAllDelete,
   cartLog,
   setCartLog,
-  userProfileData,
+  phoneNumber,
   apiEndpoint,
 }) => {
   const [numberOfItem, setNumberOfItem] = useState(1);
@@ -352,13 +351,13 @@ const CartItem = ({
     allDelete === false && setDeleteCard(false);
   }, [allDelete, cart.numberOfItem]);
   const fetchUserData = async () => {
-    const id = userProfileData.phoneNumber;
+    const id = phoneNumber;
     const res = await fetch(`${apiEndpoint}/api/userData/${id}`);
     return await res.json();
   };
 
   const handleUpdateCart = async param => {
-    const id = userProfileData.phoneNumber;
+    const id = phoneNumber;
     const res = await fetch(`${apiEndpoint}/api/cart/${id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
@@ -371,7 +370,7 @@ const CartItem = ({
   };
 
   const handleDeleteCart = async () => {
-    const id = userProfileData.phoneNumber;
+    const id = phoneNumber;
     const res = await fetch(`${apiEndpoint}/api/cart/${id}/${cart._id}`, {
       method: 'DELETE',
     });

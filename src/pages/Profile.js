@@ -31,9 +31,8 @@ const Profile = ({ navigation }) => {
   const [modalOpen, setModalOpen] = useState(false);
   const vw = useWindowDimensions().width;
   const { appContextState, setAppContextState } = useContext(AppContext);
-  const { userLoggedIn, userProfileData } = appContextState;
-  const firstname = userProfileData.firstName;
-  console.log(appContextState);
+  const { userLoggedIn, userInfo } = appContextState;
+  const firstname = userInfo.username || userInfo.firstName;
   const handleLogout = () => {
     handleShowModal();
     AsyncStorage.setItem('loggedIn', 'false');
@@ -66,10 +65,12 @@ const Profile = ({ navigation }) => {
           <Pressable onPress={() => navigation.goBack()}>
             <Back />
           </Pressable>
-          <View style={styles.headerHelp}>
+          <Pressable
+            onPress={() => navigation.navigate('FAQ')}
+            style={styles.headerHelp}>
             <Envelope />
             <Text style={styles.headerHelpText}>Help</Text>
-          </View>
+          </Pressable>
         </View>
         <Text style={styles.hello}>
           Hello
@@ -264,22 +265,22 @@ const Links = [
   {
     Image: Faq,
     text: 'F.A.Q',
-    link: 'Menu',
+    link: 'FAQ',
   },
   {
     Image: TextSize,
     text: 'Text Size',
-    link: 'Myorders',
+    link: 'Profile',
   },
   {
     Image: Language,
     text: 'Language',
-    link: 'Myorders',
+    link: 'Profile',
   },
   {
     Image: Notifications,
     text: 'Notifications',
-    link: 'Myorders',
+    link: 'Notifications',
   },
   // {
   //   Image: Logout,

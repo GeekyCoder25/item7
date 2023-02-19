@@ -1,5 +1,5 @@
 /* eslint-disable react-native/no-inline-styles */
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useContext, useState } from 'react';
 import {
   Alert,
   ImageBackground,
@@ -30,12 +30,12 @@ const Checkout = ({ navigation }) => {
   const card = 545202151201452301;
   const { appContextState, setAppContextState, apiEndpoint } =
     useContext(AppContext);
-  const { userProfileData, orders, cart, recents } = appContextState;
+  const { phoneNumber, orders, cart, recents } = appContextState;
   const handlePromoApply = () => {
     Alert.alert(`Sorry ☹️ "${promoCodeInputValue}" is an Invalid Promo Code`);
   };
   const handleFetch = async (data, data2) => {
-    const id = userProfileData.phoneNumber;
+    const id = phoneNumber;
     const res = await fetch(`${apiEndpoint}/api/favorites/${id}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },

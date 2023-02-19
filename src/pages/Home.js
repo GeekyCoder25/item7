@@ -8,8 +8,8 @@ import {
   StyleSheet,
   Text,
   TextInput,
-  // useWindowDimensions,
   View,
+  Alert,
 } from 'react-native';
 import { globalStyles } from '../styles/globalStyles';
 import ChevronDowm from '../../assets/images/chevron-down.svg';
@@ -21,15 +21,16 @@ import { AppContext } from '../components/AppContext';
 const Home = ({ navigation, route }) => {
   const { appContextState } = useContext(AppContext);
   const { userInfo, userLoggedIn, notifications } = appContextState;
-  const firstname = userInfo.firstName;
+  const firstname = userInfo.username || userInfo.firstName;
   const [searchIcon, setSearchIcon] = useState(true);
   const [notificationActive, setNotificationActive] = useState(false);
   const searchInputRef = useRef(TextInput);
   const navigator = useNavigation();
   const { no } = notifications;
-  const clearAsyncStorage = () => {
+  const pickLocation = () => {
+    Alert.alert('Still in development');
     // console.log(showAsyncStorageContentInDev());
-    AsyncStorage.clear();
+    // AsyncStorage.clear();
   };
   useEffect(() => {
     no > 0 && setNotificationActive(true);
@@ -81,9 +82,9 @@ const Home = ({ navigation, route }) => {
               </View>
             </View>
             <View style={styles.address}>
-              <Pressable onPress={clearAsyncStorage}>
+              <Pressable onPress={pickLocation}>
                 <Text>
-                  MALhub, Ilorin, Nigeria <ChevronDowm />
+                  Your location <ChevronDowm />
                 </Text>
               </Pressable>
             </View>

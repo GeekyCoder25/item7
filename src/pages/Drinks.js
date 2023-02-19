@@ -24,6 +24,7 @@ import ExtraPlus from '../../assets/images/extrasAdd.svg';
 import LinearGradient from 'react-native-linear-gradient';
 import { DrinksData } from '../data/db';
 import { AppContext } from '../components/AppContext';
+import LoadingModalOverlay from '../components/LoadingModalOverlay';
 
 const Drinks = ({ route, navigation }) => {
   const [modalOpen, setModalOpen] = useState(false);
@@ -33,7 +34,7 @@ const Drinks = ({ route, navigation }) => {
   const [extrasExpanded, setExtasExpanded] = useState(true);
   const { appContextState, setAppContextState, apiEndpoint } =
     useContext(AppContext);
-  const { userProfileData, cart } = appContextState;
+  const { phoneNumber, cart } = appContextState;
   const [addedPrice, setAddedPrice] = useState([]);
   const vh = useWindowDimensions().height;
   const cartData = [
@@ -48,7 +49,7 @@ const Drinks = ({ route, navigation }) => {
   ];
   const handleAddToCart = async () => {
     handleShowModal();
-    const id = userProfileData.phoneNumber;
+    const id = phoneNumber;
     const res = await fetch(`${apiEndpoint}/api/cart/${id}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -69,117 +70,137 @@ const Drinks = ({ route, navigation }) => {
     }
   }, [price]);
   return (
-    <ImageBackground
-      source={require('../../assets/images/splashBg.png')}
-      style={globalStyles.route}
-      resizeMode="repeat">
-      <View style={styles.FoodMenuParams}>
-        <ScrollView style={styles.scrollView}>
-          <View style={styles.body}>
-            <View style={styles.header}>
-              <Pressable onPress={() => navigation.goBack()}>
-                <Back />
-              </Pressable>
-            </View>
-            <View
-              style={{
-                ...styles.contentContainer,
-                minHeight: vh * (93 / 100),
-              }}>
-              <Text style={styles.title}>Drinks and Co</Text>
-              <View style={styles.imageContainer}>
-                <Image
-                  source={route.params.image[0] || route.params.image}
-                  style={styles.image}
-                  resizeMode="contain"
-                />
+    <>
+      <ImageBackground
+        source={require('../../assets/images/splashBg.png')}
+        style={globalStyles.route}
+        resizeMode="repeat">
+        <View style={styles.FoodMenuParams}>
+          <ScrollView style={styles.scrollView}>
+            <View style={styles.body}>
+              <View style={styles.header}>
+                <Pressable onPress={() => navigation.goBack()}>
+                  <Back />
+                </Pressable>
               </View>
-
-              <View style={styles.extras}>
-                <View style={styles.extrasHeader}>
-                  <Text style={styles.extrasHeaderText}>
-                    Choose your choice
-                  </Text>
-                  <Pressable
-                    onPress={() => setExtasExpanded(!extrasExpanded)}
-                    style={styles.chevron}>
-                    {extrasExpanded ? <ChevronDown /> : <ChevronUp />}
-                  </Pressable>
-                </View>
-                {extrasExpanded && (
-                  <View>
-                    {DrinksData.map(data => (
-                      <Choose
-                        data={data}
-                        key={data.title}
-                        drinks={drinks}
-                        setDrinks={setDrinks}
-                        price={price}
-                        setPrice={setPrice}
-                      />
-                    ))}
-                  </View>
-                )}
-              </View>
-              <View>
-                <Text style={styles.extrasHeaderText}>
-                  Special Instructions
-                </Text>
-                {/* eslint-disable-next-line react-native/no-inline-styles */}
-                <View style={{ flexDirection: 'row' }}>
-                  <TextInput
-                    style={styles.textInput}
-                    placeholder="Add a note (e.g Choose any other soda flavour if there its not listed above)"
-                    placeholderTextColor={'#80808080'}
-                    textAlignVertical="top"
+              <View
+                style={{
+                  ...styles.contentContainer,
+                  minHeight: vh * (93 / 100),
+                }}>
+                <Text style={styles.title}>Drinks and Co</Text>
+                <View style={styles.imageContainer}>
+                  <Image
+                    source={route.params.image[0] || route.params.image}
+                    style={styles.image}
+                    resizeMode="contain"
                   />
                 </View>
-              </View>
-              <View style={styles.buttonsContainer}>
-                <Pressable
-                  style={styles.cartButton}
-                  onPress={() =>
-                    handleAddToCart()
-                      .then(() => {
-                        setAppContextState({
-                          ...appContextState,
-                          cart: cartData,
-                        });
-                        setNumberOfItem(1);
-                        handleShowModal();
-                        ToastAndroid.show(
-                          `${route.params.title} has been added to your cart sucessfully 🤗`,
-                          ToastAndroid.SHORT,
-                        );
-                      })
-                      .catch(err => {
-                        console.log(err);
-                        handleShowModal();
-                        ToastAndroid.show(
-                          'No internet Connection',
-                          ToastAndroid.SHORT,
-                        );
-                      })
-                  }>
-                  <LinearGradient
-                    style={styles.cartButtonLinear}
-                    start={{ x: 0.0, y: 0.25 }}
-                    end={{ x: 0.5, y: 1 }}
-                    colors={['#f78b3f', '#fcb943']}>
-                    <Text style={styles.buyButtonText}>Add to Cart</Text>
-                  </LinearGradient>
-                </Pressable>
-                <Pressable
-                  style={styles.buyButton}
-                  onPress={() => navigation.replace('Cart')}>
-                  <Text style={styles.buyButtonText}>Buy Now</Text>
-                </Pressable>
+
+                <View style={styles.extras}>
+                  <View style={styles.extrasHeader}>
+                    <Text style={styles.extrasHeaderText}>
+                      Choose your choice
+                    </Text>
+                    <Pressable
+                      onPress={() => setExtasExpanded(!extrasExpanded)}
+                      style={styles.chevron}>
+                      {extrasExpanded ? <ChevronDown /> : <ChevronUp />}
+                    </Pressable>
+                  </View>
+                  {extrasExpanded && (
+                    <View>
+                      {DrinksData.map(data => (
+                        <Choose
+                          data={data}
+                          key={data.title}
+                          drinks={drinks}
+                          setDrinks={setDrinks}
+                          price={price}
+                          setPrice={setPrice}
+                        />
+                      ))}
+                    </View>
+                  )}
+                </View>
+                <View>
+                  <Text style={styles.extrasHeaderText}>
+                    Special Instructions
+                  </Text>
+                  {/* eslint-disable-next-line react-native/no-inline-styles */}
+                  <View style={{ flexDirection: 'row' }}>
+                    <TextInput
+                      style={styles.textInput}
+                      placeholder="Add a note (e.g Choose any other soda flavour if there its not listed above)"
+                      placeholderTextColor={'#80808080'}
+                      textAlignVertical="top"
+                    />
+                  </View>
+                </View>
+                <View style={styles.buttonsContainer}>
+                  <Pressable
+                    style={styles.cartButton}
+                    onPress={() =>
+                      drinks.length >= 1
+                        ? handleAddToCart()
+                            .then(() => {
+                              setAppContextState({
+                                ...appContextState,
+                                cart: cartData,
+                              });
+                              setNumberOfItem(1);
+                              handleShowModal();
+                              ToastAndroid.show(
+                                `${route.params.title} has been added to your cart sucessfully 🤗`,
+                                ToastAndroid.SHORT,
+                              );
+                            })
+                            .catch(err => {
+                              console.log(err);
+                              handleShowModal();
+                              ToastAndroid.show(
+                                'No internet Connection',
+                                ToastAndroid.SHORT,
+                              );
+                            })
+                        : Alert.alert('Select at least a drink')
+                    }>
+                    <LinearGradient
+                      style={styles.cartButtonLinear}
+                      start={{ x: 0.0, y: 0.25 }}
+                      end={{ x: 0.5, y: 1 }}
+                      colors={['#f78b3f', '#fcb943']}>
+                      <Text style={styles.buyButtonText}>Add to Cart</Text>
+                    </LinearGradient>
+                  </Pressable>
+                  <Pressable
+                    style={styles.buyButton}
+                    onPress={() =>
+                      drinks.length >= 1
+                        ? handleAddToCart()
+                            .then(navigation.navigate('Cart'))
+                            .catch(err => {
+                              console.log(err);
+                              ToastAndroid.show(
+                                'No internet Connection',
+                                ToastAndroid.SHORT,
+                              );
+                            })
+                        : Alert.alert('Select at least a drink')
+                    }>
+                    <Text style={styles.buyButtonText}>Buy Now</Text>
+                  </Pressable>
+                </View>
               </View>
             </View>
-          </View>
-        </ScrollView>
-      </View>
-    </ImageBackground>
+          </ScrollView>
+        </View>
+      </ImageBackground>
+      <LoadingModalOverlay
+        modalOpen={modalOpen}
+        handleShowModal={handleShowModal}
+      />
+    </>
   );
 };
 

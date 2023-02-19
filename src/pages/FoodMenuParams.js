@@ -37,7 +37,7 @@ const FoodMenuParams = ({ route, navigation }) => {
   const [extrasExpanded, setExtasExpanded] = useState(true);
   const { appContextState, setAppContextState, apiEndpoint } =
     useContext(AppContext);
-  const { userProfileData, cart, favorites } = appContextState;
+  const { phoneNumber, cart, favorites } = appContextState;
   const [additionals, setAdditionals] = useState([]);
   const [price, setPrice] = useState([]);
   const [addedPrice, setAddedPrice] = useState([]);
@@ -62,7 +62,7 @@ const FoodMenuParams = ({ route, navigation }) => {
     favorites.includes(route.params.title) && setHeartActive(true);
   }, [favorites, route.params.title]);
   const handleFavoriteFetch = async data => {
-    const id = userProfileData.phoneNumber;
+    const id = phoneNumber;
     const res = await fetch(`${apiEndpoint}/api/favorites/${id}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -128,7 +128,7 @@ const FoodMenuParams = ({ route, navigation }) => {
 
   const handleAddToCart = async () => {
     handleShowModal();
-    const id = userProfileData.phoneNumber;
+    const id = phoneNumber;
     const res = await fetch(`${apiEndpoint}/api/cart/${id}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -280,7 +280,9 @@ const FoodMenuParams = ({ route, navigation }) => {
                   </Pressable>
                   <Pressable
                     style={styles.buyButton}
-                    onPress={() => navigation.navigate('MoreOptions')}>
+                    onPress={() =>
+                      navigation.navigate('MoreOptions', cartData)
+                    }>
                     <Text style={styles.buyButtonText}>Buy Now</Text>
                   </Pressable>
                 </View>

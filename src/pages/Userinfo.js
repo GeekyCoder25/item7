@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useContext, useState } from 'react';
 import {
   Pressable,
   ImageBackground,
@@ -8,6 +8,7 @@ import {
   ScrollView,
   useWindowDimensions,
   TextInput,
+  ToastAndroid,
 } from 'react-native';
 import Back from '../../assets/images/back.svg';
 import { AppContext } from '../components/AppContext';
@@ -18,39 +19,63 @@ import LinearGradient from 'react-native-linear-gradient';
 const Userinfo = ({ navigation }) => {
   const { appContextState, setAppContextState, apiEndpoint } =
     useContext(AppContext);
-  const { userProfileData } = appContextState;
-  const { firstName, lastName, email, phoneNumber, username } = userProfileData;
+  const { userInfo, phoneNumber } = appContextState;
+  const { firstName, lastName, email, username } = userInfo;
   const [isEditing, setIsEditing] = useState(false);
-  const [allFocus, setAllFocus] = useState(true);
   const vw = useWindowDimensions().width;
   const ProfileData = [
     {
       title: 'First name',
+      titleDatabase: 'firstName',
       value: firstName,
     },
     {
       title: 'Last name',
+      titleDatabase: 'lastName',
       value: lastName,
     },
     {
       title: 'Username',
+      titleDatabase: 'username',
       value: username,
     },
     {
       title: 'Email',
+      titleDatabase: 'email',
       value: email,
     },
     {
       title: 'Phone Number',
+      titleDatabase: 'phoneNumber',
       value: phoneNumber,
     },
   ];
 
+  const [formData, setFormData] = useState(userInfo);
   const cancelEdit = () => {
     setIsEditing(false);
   };
   const updateProfile = () => {
-    setIsEditing(false);
+    const handleFavoriteFetch = async () => {
+      const id = phoneNumber;
+      const res = await fetch(`${apiEndpoint}/api/favorites/${id}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userInfo: formData }),
+      });
+      return res.json();
+    };
+    handleFavoriteFetch()
+      .then(() => {
+        setAppContextState({
+          ...appContextState,
+          userInfo: formData,
+        });
+        setIsEditing(false);
+      })
+      .catch(err =>
+        ToastAndroid.show(`Network Error: ${err.message}`, ToastAndroid.SHORT),
+      );
   };
   return (
     <ImageBackground
@@ -95,8 +120,9 @@ const Userinfo = ({ navigation }) => {
                 key={profileItem.title}
                 profileItem={profileItem}
                 isEditing={isEditing}
-                allFocus={allFocus}
-                setAllFocus={setAllFocus}
+                formData={formData}
+                setFormData={setFormData}
+                phoneNumber={phoneNumber}
               />
             ))}
           </View>
@@ -163,7 +189,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   userIconText: {
-    fontSize: 60,
+    fontSize: 70,
+    top: 5,
     fontFamily: 'Poppins-Regular',
   },
   title: {
@@ -184,6 +211,8 @@ const styles = StyleSheet.create({
     shadowColor: 'rgba(0,0,0,0.1)',
   },
   value: {
+    marginTop: -30,
+    paddingTop: 40,
     fontFamily: 'Poppins-SemiBold',
   },
   buttonsContainer: {
@@ -218,50 +247,38 @@ const styles = StyleSheet.create({
 });
 export default Userinfo;
 
-const ProfileItem = ({ profileItem, isEditing, allFocus, setAllFocus }) => {
+const ProfileItem = ({
+  profileItem,
+  isEditing,
+  formData,
+  setFormData,
+  phoneNumber,
+}) => {
   const [inputFocus, setInputFocus] = useState(false);
-  useEffect(() => {
-    console.log(allFocus);
-    setInputFocus(false);
-  }, [allFocus]);
-  return isEditing ? (
-    <Pressable
-      onPress={() => {
-        setAllFocus(true);
-        setAllFocus(false);
-        setInputFocus(true);
-      }}
+  const { title, titleDatabase, value } = profileItem;
+
+  return (
+    <View
       // eslint-disable-next-line react-native/no-inline-styles
       style={{
         ...styles.profileItem,
-
-        borderColor:
-          inputFocus && !allFocus ? globalStyles.themeColorSolo : '#fff',
+        borderColor: inputFocus ? globalStyles.themeColorSolo : '#fff',
       }}>
-      <Text style={styles.title}>{profileItem.title}</Text>
-      {isEditing && profileItem.title !== 'Phone Number' ? (
+      <Text style={styles.title}>
+        {title === 'Phone Numer' ? phoneNumber : title}
+      </Text>
+      {isEditing && title !== 'Phone Number' ? (
         <TextInput
-          defaultValue={profileItem.value}
+          defaultValue={value}
           style={styles.value}
           onFocus={() => setInputFocus(true)}
           onBlur={() => setInputFocus(false)}
+          onChangeText={text =>
+            setFormData({ ...formData, [titleDatabase]: text })
+          }
         />
       ) : (
-        <Text style={styles.value}>{profileItem.value}</Text>
-      )}
-    </Pressable>
-  ) : (
-    <View style={styles.profileItem}>
-      <Text style={styles.title}>{profileItem.title}</Text>
-      {isEditing && profileItem.title !== 'Phone Number' ? (
-        <TextInput
-          defaultValue={profileItem.value}
-          style={styles.value}
-          onFocus={() => setInputFocus(true)}
-          onBlur={() => setInputFocus(false)}
-        />
-      ) : (
-        <Text style={styles.value}>{profileItem.value}</Text>
+        <Text style={styles.value}>{value}</Text>
       )}
     </View>
   );

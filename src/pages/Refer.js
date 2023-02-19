@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import {
   Clipboard,
   ImageBackground,
@@ -11,10 +11,13 @@ import {
 import { globalStyles } from '../styles/globalStyles';
 import Close from '../../assets/images/xmark.svg';
 import Box from '../../assets/images/referBox.svg';
+import { AppContext } from '../components/AppContext';
 
 const Refer = ({ navigation }) => {
+  const { appContextState } = useContext(AppContext);
+  const { inviteCode } = appContextState;
   const referAmount = 100;
-  const inviteCode = '8M28A2Q';
+
   return (
     <ImageBackground
       source={require('../../assets/images/splashBg.png')}

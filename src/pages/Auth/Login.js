@@ -27,7 +27,8 @@ const Login = ({ navigation }) => {
   const [successMessage, setSuccessMessage] = useState('');
   const [loading, setLoading] = useState(false);
   const [dot, setDot] = useState('.');
-  const { setAppContextState, apiEndpoint } = useContext(AppContext);
+  const { setAppContextState, apiEndpoint, networkCheck } =
+    useContext(AppContext);
   const [formData, setFormData] = useState({
     phoneNumber: '',
     password: '',
@@ -44,6 +45,7 @@ const Login = ({ navigation }) => {
       setLoading(false);
     } else {
       const loginAccount = async () => {
+        networkCheck();
         const res = await fetch(`${apiEndpoint}/api/auth/user`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -73,7 +75,6 @@ const Login = ({ navigation }) => {
   };
   const saveAsyncStorage = async data => {
     try {
-      console.log(data);
       const userProfileData = data.data;
       await AsyncStorage.setItem('loggedIn', 'true');
       await AsyncStorage.setItem('phoneNumber', userProfileData.phoneNumber);
@@ -85,7 +86,6 @@ const Login = ({ navigation }) => {
       await fetchUserData().then(result => {
         setAppContextState({
           userLoggedIn: true,
-          userProfileData,
           ...result,
         });
         navigation.replace('Home');

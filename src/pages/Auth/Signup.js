@@ -28,7 +28,12 @@ const Signup = ({ navigation }) => {
   const [successMessage, setSuccessMessage] = useState('');
   const [loading, setLoading] = useState(false);
   const [dot, setDot] = useState('.');
-  const { setAppContextState, apiEndpoint } = useContext(AppContext);
+  const {
+    setAppContextState,
+    apiEndpoint,
+
+    networkCheck,
+  } = useContext(AppContext);
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -53,6 +58,12 @@ const Signup = ({ navigation }) => {
         }, 1000)
       : setDot('.');
   }, [loading, dot]);
+  const inviteCode = Array.from(Array(20), () =>
+    Math.floor(Math.random() * 36).toString(36),
+  )
+    .join('')
+    .slice(0, 6)
+    .toUpperCase();
   const saveAsyncStorage = async data => {
     try {
       const userProfileData = data.data;
@@ -67,6 +78,7 @@ const Signup = ({ navigation }) => {
             lastName: userProfileData.lastName,
             email: '',
           },
+          inviteCode,
         };
         const res = await fetch(`${apiEndpoint}/api/userData/${id}`, {
           method: 'POST',
@@ -79,7 +91,6 @@ const Signup = ({ navigation }) => {
         .then(result => {
           setAppContextState({
             userLoggedIn: true,
-            userProfileData,
             ...result,
           });
           setLoading(false);
@@ -105,6 +116,7 @@ const Signup = ({ navigation }) => {
       setLoading(false);
     } else {
       const signupaccount = async () => {
+        networkCheck();
         const res = await fetch(`${apiEndpoint}/api/auth/new-user`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },

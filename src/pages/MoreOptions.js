@@ -7,6 +7,7 @@ import {
   ScrollView,
   StyleSheet,
   Text,
+  ToastAndroid,
   TouchableOpacity,
   useWindowDimensions,
   View,
@@ -18,23 +19,22 @@ import Minus from '../../assets/images/minus.svg';
 import Plus from '../../assets/images/plus.svg';
 import Add from '../../assets/images/addyellow.svg';
 import { AppContext } from '../components/AppContext';
-const MoreOptions = ({ navigation }) => {
+const MoreOptions = ({ navigation, route }) => {
   const [foodMenuTabActive] = useState(2);
   const [foodMenuTabSelected, setFoodMenuTabSelected] = useState(2);
-  const { appContextState } = useContext(AppContext);
-  const { userLoggedIn } = appContextState;
-  // useEffect(() => {
-  //   const handleTabActive = () => {
-  //     foodMenuTabActive === dessertsData.length - 1
-  //       ? setFoodMenuTabActive(0)
-  //       : setFoodMenuTabActive(prev => prev + 1);
-  //   };
-  //   !foodMenuTabSelected &&
-  //     dessertsData.length > 1 &&
-  //     setTimeout(handleTabActive, 5000);
-  //   return clearTimeout(handleTabActive);
-  // }, [foodMenuTabActive]);
+  const { appContextState, apiEndpoint } = useContext(AppContext);
+  const { phoneNumber } = appContextState;
   const vh = useWindowDimensions().height;
+
+  const handleAddToCart = async () => {
+    const id = phoneNumber;
+    const res = await fetch(`${apiEndpoint}/api/cart/${id}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(route.params),
+    });
+    await res.json();
+  };
   return (
     <ImageBackground
       source={require('../../assets/images/splashBg.png')}
@@ -81,9 +81,15 @@ const MoreOptions = ({ navigation }) => {
               <Pressable
                 style={styles.buttonBackground}
                 onPress={() => {
-                  userLoggedIn
-                    ? navigation.navigate('Cart')
-                    : navigation.navigate('Login');
+                  handleAddToCart()
+                    .then(navigation.navigate('Cart'))
+                    .catch(err => {
+                      console.log(err);
+                      ToastAndroid.show(
+                        'No internet Connection',
+                        ToastAndroid.SHORT,
+                      );
+                    });
                 }}>
                 {foodMenuTabSelected ? (
                   <Text style={styles.buttonBackgroundText}>No, Thanks</Text>

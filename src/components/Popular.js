@@ -24,26 +24,31 @@ const Popular = ({ navigation, title }) => {
         ],
         title: 'A Plate with Chicken',
         price: 1000,
+        deliveryFee: 500,
       },
       {
         image: [require('../../assets/images/ChickenShawarma1.png')],
         title: 'Chicken Shawarma',
         price: 1200,
+        deliveryFee: 500,
       },
       {
         image: [require('../../assets/images/BeefShawarma.png')],
         title: 'Beef Shawarma',
         price: 2700,
+        deliveryFee: 500,
       },
       {
         image: [require('../../assets/images/aPlateWithCroakerFish1.png')],
         title: 'A Plate with Croaker Fish',
         price: 1150,
+        deliveryFee: 500,
       },
       {
         image: [require('../../assets/images/aPlateWithFish1.png')],
         title: 'A Plate with Fish',
         price: 1150,
+        deliveryFee: 500,
       },
       {
         image: [
@@ -52,6 +57,7 @@ const Popular = ({ navigation, title }) => {
         ],
         title: 'A Plate with Beef',
         price: 600,
+        deliveryFee: 500,
       },
     ];
     if (title === 'Popular') {
@@ -83,7 +89,7 @@ const Popular = ({ navigation, title }) => {
         </View>
         <ScrollView horizontal={true} showsHorizontalScrollIndicator={false}>
           <View style={{ ...styles.foodMenu, minWidth: screenWidth }}>
-            {selectedTab.reverse().map(foodMenu => (
+            {selectedTab.map(foodMenu => (
               <Pressable
                 onPress={() => navigation.navigate('FoodMenuParams', foodMenu)}
                 style={styles.foodMenuTitleContainer}

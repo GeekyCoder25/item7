@@ -15,15 +15,12 @@ import Eye from '../../assets/images/eye.svg';
 import EyeClosed from '../../assets/images/eyeClosed.svg';
 import WalletPlus from '../../assets/images/wallet-plus.svg';
 import WalletChevron from '../../assets/images/wallet-chevron-right.svg';
-import Promo from '../../assets/images/promo-code.svg';
+import PromoIcon from '../../assets/images/promo-code.svg';
 
 const Wallet = ({ navigation }) => {
   const [showBalance, setShowBalance] = useState(true);
-  const [promoCodeInputValue, setPromoCodeInputValue] = useState('');
   const walletAmount = 500;
-  const handlePromoApply = () => {
-    Alert.alert(`Sorry ☹️ "${promoCodeInputValue}" is an Invalid Promo Code`);
-  };
+
   return (
     <ImageBackground
       source={require('../../assets/images/splashBg.png')}
@@ -76,28 +73,7 @@ const Wallet = ({ navigation }) => {
               </Pressable>
             </View>
           </View>
-          <View>
-            <Text style={styles.promoHeader}>Promo Code</Text>
-            <View style={styles.textInputContainer}>
-              <View style={styles.promoIcon}>
-                <Promo />
-              </View>
-              <TextInput
-                placeholder="Promo Code"
-                style={styles.textInput}
-                onChangeText={val => setPromoCodeInputValue(val)}
-              />
-              <TouchableOpacity style={styles.apply} onPress={handlePromoApply}>
-                <Text
-                  style={{
-                    ...globalStyles.whiteText,
-                    ...globalStyles.fontRegular,
-                  }}>
-                  Apply
-                </Text>
-              </TouchableOpacity>
-            </View>
-          </View>
+          <Promo />
         </View>
       </View>
     </ImageBackground>
@@ -174,6 +150,10 @@ const styles = StyleSheet.create({
     color: globalStyles.themeColorSolo,
     marginTop: 5,
   },
+  promoContainer: {
+    width: 98 + '%',
+    alignSelf: 'center',
+  },
   promoHeader: {
     marginTop: 50,
     fontSize: 24,
@@ -218,3 +198,36 @@ const styles = StyleSheet.create({
   },
 });
 export default Wallet;
+
+export const Promo = () => {
+  const [promoCodeInputValue, setPromoCodeInputValue] = useState('');
+  const handlePromoApply = () => {
+    Alert.alert(`Sorry ☹️ "${promoCodeInputValue}" is an Invalid Promo Code`);
+  };
+  return (
+    <View style={styles.promoContainer}>
+      <View>
+        <Text style={styles.promoHeader}>Promo Code</Text>
+        <View style={styles.textInputContainer}>
+          <View style={styles.promoIcon}>
+            <PromoIcon />
+          </View>
+          <TextInput
+            placeholder="Promo Code"
+            style={styles.textInput}
+            onChangeText={val => setPromoCodeInputValue(val)}
+          />
+          <TouchableOpacity style={styles.apply} onPress={handlePromoApply}>
+            <Text
+              style={{
+                ...globalStyles.whiteText,
+                ...globalStyles.fontRegular,
+              }}>
+              Apply
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    </View>
+  );
+};

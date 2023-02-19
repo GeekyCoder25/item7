@@ -205,11 +205,11 @@ const styles = StyleSheet.create({
 });
 export default MyOrders;
 
-export const Order = ({ myOrderLog, order, navigation, setMyOrderLog }) => {
+export const Order = ({ order, navigation }) => {
   const [orderStatus, setOrderStatus] = useState(0);
   // const { appContextState, setAppContextState, apiEndpoint } =
   //   useContext(AppContext);
-  // const { userProfileData, orders } = appContextState;
+  // const { phoneNumber, orders } = appContextState;
 
   const handleRemove = async () => {
     try {
@@ -221,7 +221,7 @@ export const Order = ({ myOrderLog, order, navigation, setMyOrderLog }) => {
       //   }),
       // ];
       // setAppContextState({ ...appContextState, orders: tempOrders });
-      // const id = await userProfileData.phoneNumber;
+      // const id = await phoneNumber;
       // const res = await fetch(`${apiEndpoint}/api/favorites/${id}`, {
       //   method: 'POST',
       //   headers: { 'Content-Type': 'application/json' },

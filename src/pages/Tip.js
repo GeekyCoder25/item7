@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import {
   ImageBackground,
   Image,
@@ -11,8 +11,11 @@ import {
 } from 'react-native';
 import Back from '../../assets/images/back.svg';
 import Info from '../../assets/images/info.svg';
-import TipIcon from '../../assets/images/tipIcon.svg';
+import ExtrasListIcon from '../../assets/images/extrasListIcon.svg';
+import ExtrasListIconActive from '../../assets/images/extrasListIconActive.svg';
 import { globalStyles } from '../styles/globalStyles';
+import { AppContext } from '../components/AppContext';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 const TipMesaages = [
   {
     message: 'Cheers to you',
@@ -32,10 +35,14 @@ const TipMesaages = [
   },
 ];
 
-const Tip = ({ navigation }) => {
+const Tip = ({ navigation, route }) => {
+  const { showTip, setShowTip } = useContext(AppContext);
   const [modalOpen, setModalOpen] = useState(false);
   const handleShowModal = () => {
     setModalOpen(prev => !prev);
+  };
+  const saveAsyncStorage = async data => {
+    await AsyncStorage.setItem('tip', `${data}`);
   };
   return (
     <>
@@ -83,6 +90,15 @@ const Tip = ({ navigation }) => {
           </View>
           <View>
             <Text style={styles.hr}>Select a tip</Text>
+            <Pressable
+              onPress={() => {
+                setShowTip(prevShowTip => !prevShowTip);
+                saveAsyncStorage(!showTip);
+              }}
+              style={styles.dont}>
+              {!showTip ? <ExtrasListIconActive /> : <ExtrasListIcon />}
+              <Text style={styles.dontText}>Don't show Tip</Text>
+            </Pressable>
           </View>
           <View style={styles.button}>
             <Pressable
@@ -187,6 +203,14 @@ const styles = StyleSheet.create({
     borderTopWidth: 0.5,
     textAlign: 'center',
     paddingTop: 30,
+    fontFamily: 'Poppins-Regular',
+  },
+  dont: {
+    flexDirection: 'row',
+    alignSelf: 'center',
+  },
+  dontText: {
+    marginLeft: 10,
     fontFamily: 'Poppins-Regular',
   },
   button: {

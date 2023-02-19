@@ -22,7 +22,7 @@ const Favourites = ({ navigation }) => {
   const [modalOpen, setModalOpen] = useState(false);
   const { appContextState, setAppContextState, apiEndpoint } =
     useContext(AppContext);
-  const { favorites, userProfileData } = appContextState;
+  const { favorites, phoneNumber } = appContextState;
   const [favoriteLog, setFavoriteLog] = useState(favorites);
   const [favoriteLogData, setFavoriteLogData] = useState([]);
 
@@ -34,7 +34,8 @@ const Favourites = ({ navigation }) => {
     setFavoriteLogData(favoriteTabs);
   }, [favorites]);
   const handleFavoriteFetch = async data => {
-    const id = userProfileData.phoneNumber;
+    const id = phoneNumber;
+
     const res = await fetch(`${apiEndpoint}/api/favorites/${id}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },

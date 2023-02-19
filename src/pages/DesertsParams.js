@@ -33,7 +33,7 @@ const DesertsParams = ({ route, navigation }) => {
   const [additionals, setAdditionals] = useState('');
   const { appContextState, setAppContextState, apiEndpoint } =
     useContext(AppContext);
-  const { userProfileData, cart, favorites } = appContextState;
+  const { phoneNumber, cart, favorites } = appContextState;
   useEffect(() => {
     const handleTabActive = () => {
       foodMenuTabActive === route.params.image.length - 1
@@ -63,7 +63,7 @@ const DesertsParams = ({ route, navigation }) => {
 
   const handleAddToCart = async () => {
     handleShowModal();
-    const id = userProfileData.phoneNumber;
+    const id = phoneNumber;
     const res = await fetch(`${apiEndpoint}/api/cart/${id}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -76,7 +76,7 @@ const DesertsParams = ({ route, navigation }) => {
   };
 
   const handleFavoriteFetch = async data => {
-    const id = userProfileData.phoneNumber;
+    const id = phoneNumber;
     const res = await fetch(`${apiEndpoint}/api/favorites/${id}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -226,7 +226,17 @@ const DesertsParams = ({ route, navigation }) => {
                   </Pressable>
                   <Pressable
                     style={styles.buyButton}
-                    onPress={() => navigation.replace('Cart')}>
+                    onPress={() =>
+                      handleAddToCart()
+                        .then(navigation.navigate('Cart'))
+                        .catch(err => {
+                          console.log(err);
+                          ToastAndroid.show(
+                            'No internet Connection',
+                            ToastAndroid.SHORT,
+                          );
+                        })
+                    }>
                     <Text style={styles.buyButtonText}>Buy Now</Text>
                   </Pressable>
                 </View>
