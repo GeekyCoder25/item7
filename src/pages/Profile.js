@@ -32,7 +32,12 @@ const Profile = ({ navigation }) => {
   const vw = useWindowDimensions().width;
   const { appContextState, setAppContextState } = useContext(AppContext);
   const { userLoggedIn, userInfo } = appContextState;
-  const firstname = userInfo.username || userInfo.firstName;
+  const firstname =
+    userInfo.username ||
+    userInfo.username ||
+    `${userInfo.firstName.charAt(0).toUpperCase()}${userInfo.firstName
+      .slice(1, userInfo.firstName.length)
+      .toLowerCase()}`;
   const handleLogout = () => {
     handleShowModal();
     AsyncStorage.setItem('loggedIn', 'false');
@@ -169,7 +174,6 @@ const styles = StyleSheet.create({
     fontSize: 18,
     color: '#fff',
     fontFamily: 'Poppins-SemiBold',
-    textTransform: 'capitalize',
   },
   body: {
     display: 'flex',
@@ -282,9 +286,4 @@ const Links = [
     text: 'Notifications',
     link: 'Notifications',
   },
-  // {
-  //   Image: Logout,
-  //   text: 'Log Out',
-  //   link: 'Home',
-  // },
 ];

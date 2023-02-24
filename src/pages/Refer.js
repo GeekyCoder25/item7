@@ -1,4 +1,4 @@
-import React, { useContext } from 'react';
+import React, { useContext, useEffect } from 'react';
 import {
   Clipboard,
   ImageBackground,
@@ -14,10 +14,26 @@ import Box from '../../assets/images/referBox.svg';
 import { AppContext } from '../components/AppContext';
 
 const Refer = ({ navigation }) => {
-  const { appContextState } = useContext(AppContext);
-  const { inviteCode } = appContextState;
+  const { appContextState, setAppContextState, apiEndpoint } =
+    useContext(AppContext);
+  const { inviteCode, phoneNumber } = appContextState;
   const referAmount = 100;
 
+  useEffect(() => {
+    const handleFavoriteFetch = async () => {
+      const id = phoneNumber;
+      const res = await fetch(`${apiEndpoint}/api/favorites/${id}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(appContextState),
+      });
+      return res.json();
+    };
+    handleFavoriteFetch()
+      .then(setAppContextState(appContextState))
+      .catch(err => console.log(err));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   return (
     <ImageBackground
       source={require('../../assets/images/splashBg.png')}

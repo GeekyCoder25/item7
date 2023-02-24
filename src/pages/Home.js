@@ -1,4 +1,4 @@
-import { useNavigation } from '@react-navigation/native';
+import { useFocusEffect } from '@react-navigation/native';
 import React, { useContext, useEffect, useRef, useState } from 'react';
 import {
   ScrollView,
@@ -15,17 +15,22 @@ import { globalStyles } from '../styles/globalStyles';
 import ChevronDowm from '../../assets/images/chevron-down.svg';
 import FoodMenu from '../components/FoodMenu';
 import Popular from '../components/Popular';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+// import AsyncStorage from '@react-native-async-storage/async-storage';
 import ButtomTab from '../components/ButtomTab';
 import { AppContext } from '../components/AppContext';
 const Home = ({ navigation, route }) => {
-  const { appContextState } = useContext(AppContext);
-  const { userInfo, userLoggedIn, notifications } = appContextState;
-  const firstname = userInfo.username || userInfo.firstName;
+  const { appContextState, setAppContextState, apiEndpoint, setInternetCheck } =
+    useContext(AppContext);
+  const { userInfo, userLoggedIn, notifications, phoneNumber } =
+    appContextState;
+  const firstname =
+    userInfo.username ||
+    `${userInfo.firstName.charAt(0).toUpperCase()}${userInfo.firstName
+      .slice(1, userInfo.firstName.length)
+      .toLowerCase()}`;
   const [searchIcon, setSearchIcon] = useState(true);
   const [notificationActive, setNotificationActive] = useState(false);
   const searchInputRef = useRef(TextInput);
-  const navigator = useNavigation();
   const { no } = notifications;
   const pickLocation = () => {
     Alert.alert('Still in development');
@@ -33,8 +38,35 @@ const Home = ({ navigation, route }) => {
     // AsyncStorage.clear();
   };
   useEffect(() => {
-    no > 0 && setNotificationActive(true);
+    no > 0 ? setNotificationActive(true) : setNotificationActive(false);
   }, [no]);
+
+  useFocusEffect(
+    React.useCallback(() => {
+      let isActive = true;
+      const fetchUser = async () => {
+        const timeout = setTimeout(() => {
+          setInternetCheck(false);
+        }, 10000);
+        try {
+          const id = phoneNumber;
+          const res = await fetch(`${apiEndpoint}/api/userData/${id}`);
+          const data = await res.json();
+          await setAppContextState({ ...appContextState, ...data });
+          clearTimeout(timeout);
+        } catch (err) {
+          console.log(err);
+        }
+      };
+      if (isActive) {
+        fetchUser();
+      }
+      return () => {
+        isActive = false;
+      };
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []),
+  );
   return (
     <>
       <ImageBackground
@@ -45,7 +77,7 @@ const Home = ({ navigation, route }) => {
           <ScrollView>
             <View style={styles.header}>
               <View style={styles.profileIconContainer}>
-                <Pressable onPress={() => navigator.navigate('Profile')}>
+                <Pressable onPress={() => navigation.navigate('Profile')}>
                   <Image
                     source={require('../../assets/images/profile.png')}
                     style={styles.profileIcon}
@@ -68,7 +100,17 @@ const Home = ({ navigation, route }) => {
                 />
               </View>
               <View style={styles.profileIconContainer}>
-                <Pressable onPress={() => navigator.navigate('Refer')}>
+                <Pressable
+                  onPress={() => {
+                    setAppContextState({
+                      ...appContextState,
+                      notifications: {
+                        no: 0,
+                        messages: [],
+                      },
+                    });
+                    navigation.navigate('Refer');
+                  }}>
                   <Image
                     source={require('../../assets/images/notificationIcon.png')}
                     style={styles.profileIcon}

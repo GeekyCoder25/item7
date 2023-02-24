@@ -29,8 +29,8 @@ const App = () => {
   const [routeActive, setRouteActive] = useState(false);
   const [showTip, setShowTip] = useState(false);
   // const isDarkMode = useColorScheme() === 'dark';
-  // const apiEndpoint = 'https://item7-api.cyclic.app';
-  const apiEndpoint = 'http://192.168.0.101:8000';
+  const apiEndpoint = 'https://item7-api.cyclic.app';
+  // const apiEndpoint = 'http://192.168.0.101:8000';
   // const apiEndpoint = 'http://10.0.2.2:8000';
   const [appContextState, setAppContextState] = useState({
     userLoggedIn: false,
@@ -38,7 +38,7 @@ const App = () => {
     favorites: [],
     orders: [],
     notifications: {
-      no: 1,
+      no: 0,
       messages: [],
     },
     popular: [],
@@ -47,6 +47,7 @@ const App = () => {
     inviteCode: '',
   });
   const Stack = createNativeStackNavigator();
+
   useLayoutEffect(() => {
     SplashScreen.hide();
   }, []);
@@ -72,10 +73,6 @@ const App = () => {
           setChecking(false);
           setInternetCheck(new Date().getSeconds());
         });
-    } else if (checking) {
-      setTimeout(() => {
-        setInternetCheck(new Date().getSeconds());
-      }, 15000);
     }
   };
   const contextValue = {
@@ -144,7 +141,7 @@ const Logo = ({ navigation }) => {
         setInternetCheck(new Date().getSeconds());
       });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [apiEndpoint, internetCheck]);
+  }, [apiEndpoint]);
   const [mounted, setMounted] = useState(true);
   useEffect(() => {
     const getAsyncStorage = async () => {
@@ -153,21 +150,23 @@ const Logo = ({ navigation }) => {
         const getPhoneNumber = await AsyncStorage.getItem('phoneNumber');
         const getShowTip = await AsyncStorage.getItem('tip');
         if (internetCheck === true) {
-          if (getFirstTime && getPhoneNumber) {
-            fetchUserData(getPhoneNumber)
-              .then(data => {
-                setAppContextState({
-                  ...appContextState,
-                  userLoggedIn: true,
-                  ...data,
-                });
-                navigation.replace('PagesNavigation');
-                getShowTip === 'true' && setShowTip(true);
-              })
-              .catch(err => {
-                navigation.replace('PagesNavigation');
-                console.log('noLogin', err);
-              });
+          if (getFirstTime) {
+            getPhoneNumber
+              ? fetchUserData(getPhoneNumber)
+                  .then(data => {
+                    setAppContextState({
+                      ...appContextState,
+                      userLoggedIn: true,
+                      ...data,
+                    });
+                    navigation.replace('PagesNavigation');
+                    getShowTip === 'true' && setShowTip(true);
+                  })
+                  .catch(err => {
+                    navigation.replace('PagesNavigation');
+                    console.log('noLogin', err);
+                  })
+              : navigation.replace('PagesNavigation');
           } else {
             navigation.replace('Welcome');
           }

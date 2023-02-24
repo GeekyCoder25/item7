@@ -1,7 +1,6 @@
 import React, { useContext, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
-  Button,
   Modal,
   Pressable,
   StyleSheet,
@@ -10,21 +9,28 @@ import {
 } from 'react-native';
 import { AppContext } from '../components/AppContext';
 import { globalStyles } from '../styles/globalStyles';
+import Icon from 'react-native-vector-icons/MaterialIcons';
 
 const NoInternetModal = ({ modalOpen, navigation }) => {
   const [tryingAgain, setTryingAgain] = useState(false);
   const { setInternetCheck, routeActive, apiEndpoint } = useContext(AppContext);
   const [checking, setChecking] = useState(false);
+  useEffect(() => {
+    setInternetCheck(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const handlePress = () => {
     setTryingAgain(true);
     setChecking(true);
-    const interval = async () => {
+    const fetchFunc = async () => {
       const res = await fetch(`${apiEndpoint}/api/network`);
       const data = await res.json();
       return data;
     };
-    !tryingAgain &&
-      interval()
+    if (!routeActive) {
+      navigation.replace('Logo');
+    } else if (!tryingAgain) {
+      fetchFunc()
         .then(data => {
           setInternetCheck(data.network);
           setTryingAgain(false);
@@ -35,16 +41,14 @@ const NoInternetModal = ({ modalOpen, navigation }) => {
           setTryingAgain(false);
           setChecking(false);
         });
-    if (!routeActive) {
-      navigation.replace('Logo');
     }
   };
-  useEffect(() => {
-    checking &&
-      setTimeout(() => {
-        setChecking(false);
-      }, 10000);
-  }, [checking]);
+  // useEffect(() => {
+  //   checking &&
+  //     setTimeout(() => {
+  //       setChecking(false);
+  //     }, 10000);
+  // }, [checking]);
   return (
     <Modal
       visible={modalOpen}
@@ -54,19 +58,25 @@ const NoInternetModal = ({ modalOpen, navigation }) => {
       <Pressable style={styles.overlay} />
       <View style={styles.modalContainer}>
         <View style={styles.modal}>
+          <View style={styles.face}>
+            <Icon
+              name="sentiment-very-dissatisfied"
+              size={85}
+              color={globalStyles.themeColorSolo}
+            />
+          </View>
           <Text style={styles.text}>No Internet Connection</Text>
-          <Pressable style={styles.button}>
-            {checking ? (
-              <ActivityIndicator color={globalStyles.themeColorSolo} />
-            ) : (
-              <Button
-                title="Try Again"
-                color={globalStyles.themeColorSolo}
-                style={styles.button}
-                onPress={handlePress}
-              />
-            )}
-          </Pressable>
+          {checking ? (
+            <ActivityIndicator
+              color={globalStyles.themeColorSolo}
+              style={styles.activity}
+              size="large"
+            />
+          ) : (
+            <Pressable style={styles.button} onPress={handlePress}>
+              <Text style={styles.buttonText}>Try Again</Text>
+            </Pressable>
+          )}
         </View>
       </View>
     </Modal>
@@ -98,20 +108,33 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     elevation: 10,
   },
+  face: {
+    alignItems: 'center',
+    marginBottom: 10,
+  },
   text: {
     textAlign: 'center',
-    // fontWeight: '600',
     fontFamily: 'Poppins-SemiBold',
     fontSize: 20,
   },
+  activity: {
+    marginVertical: 20,
+  },
   button: {
-    marginTop: 20,
-    width: 30 + '%',
-    // backgroundColor: globalStyles.themeColorSolo,
+    marginVertical: 20,
+    height: 40,
+    paddingHorizontal: 30,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: globalStyles.themeColorSolo,
     alignSelf: 'center',
+    elevation: 20,
+    borderRadius: 5,
   },
   buttonText: {
     color: '#fff',
     textAlign: 'center',
+    fontFamily: 'Poppins-SemiBold',
+    fontSize: 18,
   },
 });

@@ -15,6 +15,7 @@ import { AppContext } from '../components/AppContext';
 import { globalStyles } from '../styles/globalStyles';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import LinearGradient from 'react-native-linear-gradient';
+import LoadingRoller from '../components/LoadingRoller';
 
 const Userinfo = ({ navigation }) => {
   const { appContextState, setAppContextState, apiEndpoint } =
@@ -22,7 +23,9 @@ const Userinfo = ({ navigation }) => {
   const { userInfo, phoneNumber } = appContextState;
   const { firstName, lastName, email, username } = userInfo;
   const [isEditing, setIsEditing] = useState(false);
+  const [loading, setLoading] = useState(false);
   const vw = useWindowDimensions().width;
+  const vh = useWindowDimensions().height;
   const ProfileData = [
     {
       title: 'First name',
@@ -56,6 +59,7 @@ const Userinfo = ({ navigation }) => {
     setIsEditing(false);
   };
   const updateProfile = () => {
+    setLoading(true);
     const handleFavoriteFetch = async () => {
       const id = phoneNumber;
       const res = await fetch(`${apiEndpoint}/api/favorites/${id}`, {
@@ -75,7 +79,8 @@ const Userinfo = ({ navigation }) => {
       })
       .catch(err =>
         ToastAndroid.show(`Network Error: ${err.message}`, ToastAndroid.SHORT),
-      );
+      )
+      .finally(() => setLoading(false));
   };
   return (
     <ImageBackground
@@ -100,46 +105,56 @@ const Userinfo = ({ navigation }) => {
               <Icon name="edit" size={25} color={globalStyles.themeColorSolo} />
             </Pressable>
           )}
-          <View>
-            <View style={styles.userIconContianer}>
-              <View
-                style={{
-                  ...styles.userIcon,
-                  width: vw / 2.5,
-                  height: vw / 2.5,
-                  borderRadius: vw / 4,
-                }}>
-                <Text style={styles.userIconText}>
-                  {firstName.charAt(0)}
-                  {lastName.charAt(0)}
-                </Text>
+          {/* {loading ? ( */}
+          {!loading ? (
+            <>
+              <View>
+                <View style={styles.userIconContianer}>
+                  <View
+                    style={{
+                      ...styles.userIcon,
+                      width: vw / 2.5,
+                      height: vw / 2.5,
+                      borderRadius: vw / 4,
+                    }}>
+                    <Text style={styles.userIconText}>
+                      {firstName.charAt(0)}
+                      {lastName.charAt(0)}
+                    </Text>
+                  </View>
+                </View>
+                {ProfileData.map(profileItem => (
+                  <ProfileItem
+                    key={profileItem.title}
+                    profileItem={profileItem}
+                    isEditing={isEditing}
+                    formData={formData}
+                    setFormData={setFormData}
+                    phoneNumber={phoneNumber}
+                  />
+                ))}
               </View>
-            </View>
-            {ProfileData.map(profileItem => (
-              <ProfileItem
-                key={profileItem.title}
-                profileItem={profileItem}
-                isEditing={isEditing}
-                formData={formData}
-                setFormData={setFormData}
-                phoneNumber={phoneNumber}
-              />
-            ))}
-          </View>
-          {isEditing && (
-            <View style={styles.buttonsContainer}>
-              <Pressable style={styles.cartButton} onPress={cancelEdit}>
-                <LinearGradient
-                  style={styles.cartButtonLinear}
-                  start={{ x: 0.0, y: 0.25 }}
-                  end={{ x: 0.5, y: 1 }}
-                  colors={['#f78b3f', '#fcb943']}>
-                  <Text style={styles.buyButtonText}>Cancel</Text>
-                </LinearGradient>
-              </Pressable>
-              <Pressable style={styles.buyButton} onPress={updateProfile}>
-                <Text style={styles.buyButtonText}>Update Profile</Text>
-              </Pressable>
+
+              {isEditing && (
+                <View style={styles.buttonsContainer}>
+                  <Pressable style={styles.cartButton} onPress={cancelEdit}>
+                    <LinearGradient
+                      style={styles.cartButtonLinear}
+                      start={{ x: 0.0, y: 0.25 }}
+                      end={{ x: 0.5, y: 1 }}
+                      colors={['#f78b3f', '#fcb943']}>
+                      <Text style={styles.buyButtonText}>Cancel</Text>
+                    </LinearGradient>
+                  </Pressable>
+                  <Pressable style={styles.buyButton} onPress={updateProfile}>
+                    <Text style={styles.buyButtonText}>Update Profile</Text>
+                  </Pressable>
+                </View>
+              )}
+            </>
+          ) : (
+            <View style={{ height: vh / 1.3 }}>
+              <LoadingRoller />
             </View>
           )}
         </ScrollView>
@@ -214,6 +229,11 @@ const styles = StyleSheet.create({
     marginTop: -30,
     paddingTop: 40,
     fontFamily: 'Poppins-SemiBold',
+  },
+  roller: {
+    flex: 1,
+    backgroundColor: 'red',
+    height: 600,
   },
   buttonsContainer: {
     flexDirection: 'row',

@@ -9,6 +9,7 @@ import {
   Image,
   useWindowDimensions,
   View,
+  Alert,
 } from 'react-native';
 import Back from '../../../assets/images/back.svg';
 import Phone from '../../../assets/images/phone.svg';
@@ -109,6 +110,9 @@ const Login = ({ navigation }) => {
         }, 1000)
       : setDot('.');
   }, [loading, dot]);
+  const handleGoogleClick = () => {
+    Alert.alert('Still in Development');
+  };
   return (
     <ImageBackground
       source={require('../../../assets/images/splashBg.png')}
@@ -167,10 +171,8 @@ const Login = ({ navigation }) => {
                 }}
                 ref={passwordInputRef}
               />
-              <Pressable onPress={handleShowPassword}>
-                <View style={styles.eye}>
-                  <Eye />
-                </View>
+              <Pressable style={styles.eye} onPress={handleShowPassword}>
+                <Eye />
               </Pressable>
             </View>
             <View style={styles.errorMessage}>
@@ -198,20 +200,24 @@ const Login = ({ navigation }) => {
               )}
               <Text style={styles.successMessageText}>{successMessage}</Text>
             </View>
-            <Text style={styles.TandC}>
+            <Pressable
+              onPress={() => Alert.alert('Sorry, No backup email set yet')}
+              style={styles.TandC}>
               <Text style={styles.TandColor}>Forgot Password?</Text>
-            </Text>
+            </Pressable>
             <View style={styles.orContainer}>
               <Text style={styles.hr}>.</Text>
               <Text style={styles.or}>or</Text>
               <Text style={styles.hr}>.</Text>
             </View>
-            <View style={styles.googleContainer}>
+            <Pressable
+              onPress={handleGoogleClick}
+              style={styles.googleContainer}>
               <View style={styles.googleIcon}>
                 <Google />
               </View>
               <Text style={styles.google}>Log In with Google</Text>
-            </View>
+            </Pressable>
           </View>
           <View style={styles.question}>
             <Text style={styles.questionText}>
@@ -294,10 +300,12 @@ const styles = StyleSheet.create({
     fontFamily: 'Poppins-Regular',
   },
   eye: {
+    height: 100 + '%',
     position: 'absolute',
-    right: 10,
+    right: 0,
+    paddingHorizontal: 15,
     zIndex: 9,
-    top: 35 + '%',
+    justifyContent: 'center',
   },
   errorMessage: {
     flexDirection: 'row',

@@ -9,6 +9,7 @@ import {
   Image,
   useWindowDimensions,
   View,
+  Alert,
 } from 'react-native';
 import Back from '../../../assets/images/back.svg';
 import User from '../../../assets/images/user.svg';
@@ -79,6 +80,10 @@ const Signup = ({ navigation }) => {
             email: '',
           },
           inviteCode,
+          notifications: {
+            no: 1,
+            messages: [],
+          },
         };
         const res = await fetch(`${apiEndpoint}/api/userData/${id}`, {
           method: 'POST',
@@ -142,6 +147,9 @@ const Signup = ({ navigation }) => {
           console.log(err);
         });
     }
+  };
+  const handleGoogleClick = () => {
+    Alert.alert('Still in Development');
   };
   return (
     <ImageBackground
@@ -235,10 +243,10 @@ const Signup = ({ navigation }) => {
                 }}
                 name="password"
               />
-              <Pressable onPress={() => setShowPassword(prev => !prev)}>
-                <View style={styles.eye}>
-                  <Eye />
-                </View>
+              <Pressable
+                style={styles.eye}
+                onPress={() => setShowPassword(prev => !prev)}>
+                <Eye />
               </Pressable>
             </View>
             <View style={styles.textInputContainer}>
@@ -260,10 +268,10 @@ const Signup = ({ navigation }) => {
                 }}
                 name="confirmPassword"
               />
-              <Pressable onPress={() => setShowConfirmPassword(prev => !prev)}>
-                <View style={styles.eye}>
-                  <Eye />
-                </View>
+              <Pressable
+                style={styles.eye}
+                onPress={() => setShowConfirmPassword(prev => !prev)}>
+                <Eye />
               </Pressable>
             </View>
             <View style={styles.errorMessage}>
@@ -305,12 +313,14 @@ const Signup = ({ navigation }) => {
               <Text style={styles.or}>or</Text>
               <Text style={styles.hr}>.</Text>
             </View>
-            <View style={styles.googleContainer}>
+            <Pressable
+              onPress={handleGoogleClick}
+              style={styles.googleContainer}>
               <View style={styles.googleIcon}>
                 <Google />
               </View>
               <Text style={styles.google}>Continue with Google</Text>
-            </View>
+            </Pressable>
           </View>
           <View style={styles.question}>
             <Text style={styles.questionText}>
@@ -394,10 +404,12 @@ const styles = StyleSheet.create({
     fontFamily: 'Poppins-Regular',
   },
   eye: {
+    height: 100 + '%',
     position: 'absolute',
-    right: 10,
+    right: 0,
+    paddingHorizontal: 15,
     zIndex: 9,
-    top: 35 + '%',
+    justifyContent: 'center',
   },
   errorMessage: {
     flexDirection: 'row',
