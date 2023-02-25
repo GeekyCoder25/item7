@@ -143,7 +143,7 @@ const Checkout = ({ navigation }) => {
                     <View style={styles.locationText}>
                       <Text style={styles.locationName}>Location</Text>
                       <Text style={styles.locationAddress}>
-                        Item7 restaurant, ECWA complex, challenge ilorin
+                        Item 7 restaurant, ECWA complex, challenge ilorin
                       </Text>
                     </View>
                     <View style={styles.chevron}>

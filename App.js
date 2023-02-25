@@ -8,14 +8,13 @@ import {
   StyleSheet,
   TouchableWithoutFeedback,
   Keyboard,
-  // Text,
   Image,
   SafeAreaView,
   // useColorScheme,
   ToastAndroid,
   StatusBar,
   ActivityIndicator,
-  Text,
+  // Text,
 } from 'react-native';
 import Welcome from './src/pages/SplashScreens/Welcome';
 import PagesNavigation from './src/components/PagesNavigation';

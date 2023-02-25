@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useContext, useState } from 'react';
 import {
   ImageBackground,
   Pressable,
@@ -22,7 +22,6 @@ import TextSize from '../../assets/images/text-size.svg';
 import Language from '../../assets/images/language.svg';
 import Notifications from '../../assets/images/notification.svg';
 import Logout from '../../assets/images/logout.svg';
-import { useContext } from 'react/cjs/react.development';
 import { AppContext } from '../components/AppContext';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import LoadingModalOverlay from '../components/LoadingModalOverlay';

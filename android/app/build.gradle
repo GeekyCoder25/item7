@@ -63,7 +63,7 @@ import org.apache.tools.ant.taskdefs.condition.Os
  *   // require('./image.png')), in release mode
  *   resourcesDirRelease: "$buildDir/intermediates/res/merged/release",
  *
- *   // by default the gradle tasks are skipped if none of the JS files or assets change; this means
+ *   // by default the gradle task  s are skipped if none of the JS files or assets change; this means
  *   // that we don't look at files in android/ or ios/ to determine whether the tasks are up to
  *   // date; if you have any other folders that you want to ignore for performance reasons (gradle
  *   // indexes the entire tree), add them here. Alternatively, if you have JS files in android/
@@ -139,7 +139,7 @@ android {
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
-        versionName "1.0"
+        versionName "0.0.1-preRelease"
         buildConfigField "boolean", "IS_NEW_ARCHITECTURE_ENABLED", isNewArchitectureEnabled().toString()
 
         if (isNewArchitectureEnabled()) {

@@ -10,7 +10,6 @@ import {
   View,
 } from 'react-native';
 import { themeColor } from '../../../app.json';
-import { globalStyles } from '../../styles/globalStyles';
 const Onboarding = ({
   image,
   heading,
@@ -80,7 +79,7 @@ const Onboarding = ({
             <TouchableOpacity
               onPress={skipSplashScreen}
               style={styles.getStarted}>
-              <Text style={globalStyles.whiteText}>Get Started</Text>
+              <Text style={styles.buttonText}>Get Started</Text>
             </TouchableOpacity>
           )}
         </View>
@@ -184,6 +183,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     borderRadius: 8,
+  },
+  buttonText: {
+    fontFamily: 'Poppins-SemiBold',
+    color: '#fff',
   },
 });
 export default Onboarding;
