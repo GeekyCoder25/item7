@@ -193,7 +193,7 @@ const Logo = ({ navigation }) => {
       if (internetCheck !== true) {
         ToastAndroid.show('No internet connection', ToastAndroid.LONG);
       }
-    }, 10000);
+    }, 15000);
     return () => {
       clearTimeout(timeout);
     };
