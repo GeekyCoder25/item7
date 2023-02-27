@@ -281,7 +281,7 @@ export const Order = ({ order, navigation }) => {
                 style={styles.track}
                 onPress={() => {
                   Alert.alert(
-                    "You won't see anything, u pay? wey u wan dey tack order",
+                    "You won't see anything, u pay? wey u wan dey track order",
                   );
                 }}>
                 <Text style={styles.trackText}>Track Order</Text>

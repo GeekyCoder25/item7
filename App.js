@@ -27,10 +27,11 @@ const App = () => {
   const [checking, setChecking] = useState(false);
   const [routeActive, setRouteActive] = useState(false);
   const [showTip, setShowTip] = useState(false);
+  const [everLoggedIn, setEverLoggedIn] = useState(false);
   // const isDarkMode = useColorScheme() === 'dark';
-  const apiEndpoint = 'https://item7-api.cyclic.app';
+  // const apiEndpoint = 'https://item7-api.cyclic.app';
   // const apiEndpoint = 'http://192.168.0.101:8000';
-  // const apiEndpoint = 'http://10.0.2.2:8000';
+  const apiEndpoint = 'http://10.0.2.2:8000';
   const [appContextState, setAppContextState] = useState({
     userLoggedIn: false,
     cart: [],
@@ -85,6 +86,8 @@ const App = () => {
     networkCheck,
     showTip,
     setShowTip,
+    everLoggedIn,
+    setEverLoggedIn,
   };
   return (
     <>
@@ -126,6 +129,7 @@ const Logo = ({ navigation }) => {
     internetCheck,
     setInternetCheck,
     setShowTip,
+    setEverLoggedIn,
   } = useContext(AppContext);
   useEffect(() => {
     const interval = async () => {
@@ -148,6 +152,8 @@ const Logo = ({ navigation }) => {
         const getFirstTime = await AsyncStorage.getItem('firstTime');
         const getPhoneNumber = await AsyncStorage.getItem('phoneNumber');
         const getShowTip = await AsyncStorage.getItem('tip');
+        const getEverLoggedIn = await AsyncStorage.getItem('everLoggedIn');
+        getEverLoggedIn === 'true' && setEverLoggedIn(true);
         if (internetCheck === true) {
           if (getFirstTime) {
             getPhoneNumber

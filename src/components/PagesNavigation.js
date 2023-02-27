@@ -26,7 +26,7 @@ import NoInternetModal from '../pages/NoInternetModal';
 
 const PagesNavigation = () => {
   const Stack = createNativeStackNavigator();
-  const { appContextState, internetCheck, setRouteActive } =
+  const { appContextState, internetCheck, setRouteActive, everLoggedIn } =
     useContext(AppContext);
   useEffect(() => {
     setRouteActive(true);
@@ -55,8 +55,6 @@ const PagesNavigation = () => {
         <Stack.Screen name="Notifications" component={Refer} />
         <Stack.Screen name="Checkout" component={Checkout} />
         <Stack.Screen name="Congrats" component={Congrats} />
-        <Stack.Screen name="Signup" component={Signup} />
-        <Stack.Screen name="Login" component={Login} />
         <Stack.Screen
           name="Promo"
           component={Promo}
@@ -65,8 +63,17 @@ const PagesNavigation = () => {
       </Stack.Navigator>
     ) : (
       <Stack.Navigator screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="Login" component={Login} />
-        <Stack.Screen name="Signup" component={Signup} />
+        {everLoggedIn ? (
+          <>
+            <Stack.Screen name="Login" component={Login} />
+            <Stack.Screen name="Signup" component={Signup} />
+          </>
+        ) : (
+          <>
+            <Stack.Screen name="Signup" component={Signup} />
+            <Stack.Screen name="Login" component={Login} />
+          </>
+        )}
       </Stack.Navigator>
     )
   ) : (

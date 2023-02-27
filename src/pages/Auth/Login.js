@@ -78,6 +78,7 @@ const Login = ({ navigation }) => {
     try {
       const userProfileData = data.data;
       await AsyncStorage.setItem('loggedIn', 'true');
+      await AsyncStorage.setItem('everLoggedIn', 'true');
       await AsyncStorage.setItem('phoneNumber', userProfileData.phoneNumber);
       const fetchUserData = async () => {
         const id = userProfileData.phoneNumber;
@@ -334,6 +335,7 @@ const styles = StyleSheet.create({
   TandColor: {
     color: '#FCB32B',
     textDecorationLine: 'underline',
+    fontFamily: 'Poppins-Regular',
   },
   orContainer: {
     flexDirection: 'row',

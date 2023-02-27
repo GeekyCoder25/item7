@@ -29,7 +29,8 @@ import LoadingModalOverlay from '../components/LoadingModalOverlay';
 const Profile = ({ navigation }) => {
   const [modalOpen, setModalOpen] = useState(false);
   const vw = useWindowDimensions().width;
-  const { appContextState, setAppContextState } = useContext(AppContext);
+  const { appContextState, setAppContextState, setEverLoggedIn } =
+    useContext(AppContext);
   const { userLoggedIn, userInfo } = appContextState;
   const firstname =
     userInfo.username ||
@@ -39,6 +40,7 @@ const Profile = ({ navigation }) => {
       .toLowerCase()}`;
   const handleLogout = () => {
     handleShowModal();
+    setEverLoggedIn(true);
     AsyncStorage.setItem('loggedIn', 'false');
     AsyncStorage.removeItem('phoneNumber');
     setAppContextState({
@@ -56,7 +58,6 @@ const Profile = ({ navigation }) => {
       userInfo: [],
     });
     handleShowModal();
-    navigation.navigate('Home');
   };
   const handleShowModal = () => {
     setModalOpen(prev => !prev);

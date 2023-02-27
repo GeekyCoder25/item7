@@ -41,11 +41,6 @@ const Signup = ({ navigation }) => {
     password: '',
     confirmPassword: '',
     phoneNumber: '',
-    // firstName: 'Nice',
-    // lastName: 'Nice',
-    // password: '251101',
-    // confirmPassword: '251101',
-    // phoneNumber: '9073002596',
   });
   const vh = useWindowDimensions().height;
   const editInput = () => {
@@ -69,6 +64,7 @@ const Signup = ({ navigation }) => {
     try {
       const userProfileData = data.data;
       await AsyncStorage.setItem('loggedIn', 'true');
+      await AsyncStorage.setItem('everLoggedIn', 'true');
       await AsyncStorage.setItem('phoneNumber', userProfileData.phoneNumber);
       const fetchUserData = async () => {
         const id = userProfileData.phoneNumber;
