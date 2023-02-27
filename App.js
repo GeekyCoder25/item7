@@ -29,9 +29,9 @@ const App = () => {
   const [showTip, setShowTip] = useState(false);
   const [everLoggedIn, setEverLoggedIn] = useState(false);
   // const isDarkMode = useColorScheme() === 'dark';
-  // const apiEndpoint = 'https://item7-api.cyclic.app';
+  const apiEndpoint = 'https://item7-api.cyclic.app';
   // const apiEndpoint = 'http://192.168.0.101:8000';
-  const apiEndpoint = 'http://10.0.2.2:8000';
+  // const apiEndpoint = 'http://10.0.2.2:8000';
   const [appContextState, setAppContextState] = useState({
     userLoggedIn: false,
     cart: [],
